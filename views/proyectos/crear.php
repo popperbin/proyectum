@@ -1,28 +1,22 @@
-<?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
-
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
-?>
+<?php require_once __DIR__ . "/../../config/auth.php"; requireRole(["administrador", "gestor"]); ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Proyecto</title>
+</head>
+<body>
+    <h2>Nuevo Proyecto</h2>
+    <form method="POST" action="../../controllers/ProyectoController.php?accion=crear">
+        <input type="text" name="nombre" placeholder="Nombre" required><br>
+        <textarea name="descripcion" placeholder="Descripción"></textarea><br>
+        <label>Fecha Inicio</label><input type="date" name="fecha_inicio"><br>
+        <label>Fecha Fin</label><input type="date" name="fecha_fin"><br>
+        <label>ID Gestor</label><input type="number" name="gestor_id"><br>
+        <label>ID Cliente</label><input type="number" name="cliente_id"><br>
+        <label>Presupuesto</label><input type="number" step="0.01" name="presupuesto"><br>
+        <button type="submit">Guardar</button>
+    </form>
+    <a href="listar.php">Volver</a>
+</body>
+</html>

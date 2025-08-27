@@ -1,28 +1,46 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+require_once __DIR__ . '/../models/Riesgo.php';
+require_once __DIR__ . '/../config/auth.php';
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+$risk = new Riesgo();
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
+$accion = $_GET['accion'] ?? '';
+
+switch ($accion) {
+    case 'listar':
+        requireRole(["gestor", "administrador"]);
+        $idProyecto = $_GET['id_proyecto'];
+        $riesgos = $risk->listarPorProyecto($idProyecto);
+        require __DIR__ . '/../views/riesgos/listar.php';
+        break;
+
+    case 'crear':
+        requireRole(["gestor", "administrador"]);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $risk->crear($_POST);
+            header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $_POST['id_proyecto']);
+            exit();
+        }
+        require __DIR__ . '/../views/riesgos/crear.php';
+        break;
+
+    case 'editar':
+        requireRole(["gestor", "administrador"]);
+        $id = $_GET['id'];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $risk->actualizar($id, $_POST);
+            header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $_POST['id_proyecto']);
+            exit();
+        }
+        $riesgo = $risk->obtener($id);
+        require __DIR__ . '/../views/riesgos/editar.php';
+        break;
+
+    case 'eliminar':
+        requireRole(["gestor", "administrador"]);
+        $id = $_GET['id'];
+        $idProyecto = $_GET['id_proyecto'];
+        $risk->eliminar($id);
+        header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $idProyecto);
+        break;
 }
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
-?>

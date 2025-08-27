@@ -1,28 +1,26 @@
-<?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+<?php require_once __DIR__ . "/../../config/auth.php"; requireLogin(); ?>
+<h2>⚠️ Riesgos del Proyecto</h2>
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+<a href="../../controllers/RiesgoController.php?accion=crear&id_proyecto=<?php echo $_GET['id_proyecto']; ?>">➕ Registrar Riesgo</a>
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
-?>
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Descripción</th>
+        <th>Impacto</th>
+        <th>Probabilidad</th>
+        <th>Mitigación</th>
+        <th>Acciones</th>
+    </tr>
+    <?php foreach ($riesgos as $r): ?>
+    <tr>
+        <td><?php echo $r['descripcion']; ?></td>
+        <td><?php echo $r['impacto']; ?></td>
+        <td><?php echo $r['probabilidad']; ?></td>
+        <td><?php echo $r['mitigacion']; ?></td>
+        <td>
+            <a href="../../controllers/RiesgoController.php?accion=editar&id=<?php echo $r['id']; ?>&id_proyecto=<?php echo $_GET['id_proyecto']; ?>">✏️</a>
+            <a href="../../controllers/RiesgoController.php?accion=eliminar&id=<?php echo $r['id']; ?>&id_proyecto=<?php echo $_GET['id_proyecto']; ?>" onclick="return confirm('¿Eliminar riesgo?')">🗑️</a>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</table>

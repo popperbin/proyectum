@@ -1,28 +1,32 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+require_once __DIR__ . "/../../controllers/TareaController.php";
+require_once __DIR__ . "/../../config/auth.php";
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+requireRole(["gestor","administrador","colaborador"]);
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
+$proyecto_id = $_GET['proyecto_id'];
+$controller = new TareaController();
+$tareas = $controller->listar($proyecto_id);
+
+// Agrupamos por estado
+$estados = ["pendiente","en progreso","completada","bloqueada"];
+$agrupadas = [];
+foreach ($estados as $e) {
+    $agrupadas[$e] = array_filter($tareas, fn($t) => $t['estado'] === $e);
 }
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
 ?>
+<h2>📌 Tablero de Tareas (Kanban)</h2>
+<div style="display:flex; gap:20px;">
+    <?php foreach ($estados as $estado): ?>
+        <div style="flex:1; border:1px solid #ccc; padding:10px;">
+            <h3><?php echo ucfirst($estado); ?></h3>
+            <?php foreach ($agrupadas[$estado] as $t): ?>
+                <div style="border:1px solid #999; margin:5px; padding:5px;">
+                    <strong><?php echo $t['titulo']; ?></strong><br>
+                    Responsable: <?php echo $t['responsable']; ?><br>
+                    <a href="../../controllers/TareaController.php?accion=estado&id=<?php echo $t['id']; ?>&estado=en progreso&proyecto_id=<?php echo $proyecto_id; ?>">➡️ Mover</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endforeach; ?>
+</div>

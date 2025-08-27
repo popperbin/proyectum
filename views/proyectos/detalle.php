@@ -1,28 +1,22 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
-
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
+require_once __DIR__ . "/../../models/Proyecto.php";
+$proyectoModel = new Proyecto();
+$proyecto = $proyectoModel->obtenerPorId($_GET['id']);
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle Proyecto</title>
+</head>
+<body>
+    <h2>Detalle del Proyecto</h2>
+    <p><strong>Nombre:</strong> <?= $proyecto['nombre'] ?></p>
+    <p><strong>Descripción:</strong> <?= $proyecto['descripcion'] ?></p>
+    <p><strong>Fecha inicio:</strong> <?= $proyecto['fecha_inicio'] ?></p>
+    <p><strong>Fecha fin:</strong> <?= $proyecto['fecha_fin'] ?></p>
+    <p><strong>Presupuesto:</strong> <?= $proyecto['presupuesto'] ?></p>
+    <p><strong>Estado:</strong> <?= $proyecto['estado'] ?></p>
+    <a href="listar.php">Volver</a>
+</body>
+</html>

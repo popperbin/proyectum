@@ -1,28 +1,25 @@
-<?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+<h2>Registrar Riesgo</h2>
+<form method="POST">
+    <input type="hidden" name="id_proyecto" value="<?php echo $_GET['id_proyecto']; ?>">
+    <label>Descripción:</label><br>
+    <textarea name="descripcion" required></textarea><br><br>
+    
+    <label>Impacto:</label><br>
+    <select name="impacto" required>
+        <option value="Bajo">Bajo</option>
+        <option value="Medio">Medio</option>
+        <option value="Alto">Alto</option>
+    </select><br><br>
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+    <label>Probabilidad:</label><br>
+    <select name="probabilidad" required>
+        <option value="Baja">Baja</option>
+        <option value="Media">Media</option>
+        <option value="Alta">Alta</option>
+    </select><br><br>
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
+    <label>Mitigación:</label><br>
+    <textarea name="mitigacion" required></textarea><br><br>
 
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
-?>
+    <button type="submit">Guardar</button>
+</form>

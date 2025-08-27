@@ -1,28 +1,39 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+require_once __DIR__ . "/../models/Tarea.php";
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+class TareaController {
+    private $tarea;
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
+    public function __construct() {
+        $this->tarea = new Tarea();
     }
-} else {
-    echo "0 resultados";
+
+    public function listar($proyecto_id) {
+        return $this->tarea->listarPorProyecto($proyecto_id);
+    }
+
+    public function crear($data) {
+        return $this->tarea->crear($data);
+    }
+
+    public function actualizarEstado($id, $estado) {
+        return $this->tarea->actualizarEstado($id, $estado);
+    }
 }
 
-$conn->close();
-?>
+if (isset($_GET['accion'])) {
+    $controller = new TareaController();
+
+    if ($_GET['accion'] === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->crear($_POST);
+        header("Location: ../views/tareas/tablero.php?proyecto_id=" . $_POST['proyecto_id']);
+        exit();
+    }
+
+    if ($_GET['accion'] === 'estado' && isset($_GET['id']) && isset($_GET['estado'])) {
+        $controller->actualizarEstado($_GET['id'], $_GET['estado']);
+        header("Location: ../views/tareas/tablero.php?proyecto_id=" . $_GET['proyecto_id']);
+        exit();
+    }
+}
+

@@ -1,28 +1,76 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+require_once __DIR__ . "/../config/auth.php";
+requireRole(["administrador", "gestor"]);
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . "/../models/Proyecto.php";
 
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
+use Dompdf\Dompdf;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
+class InformeController {
 
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
+    public function proyectosPDF() {
+        $proyectos = Proyecto::listar();
+
+        ob_start();
+        include __DIR__ . "/../views/informes/proyectos_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream("proyectos.pdf", ["Attachment" => true]);
     }
-} else {
-    echo "0 resultados";
+
+    public function proyectosExcel() {
+        $proyectos = Proyecto::listar();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Encabezados
+        $sheet->setCellValue('A1', 'ID');
+        $sheet->setCellValue('B1', 'Nombre');
+        $sheet->setCellValue('C1', 'Descripción');
+        $sheet->setCellValue('D1', 'Estado');
+        $sheet->setCellValue('E1', 'Fecha Inicio');
+        $sheet->setCellValue('F1', 'Fecha Fin');
+
+        // Datos
+        $row = 2;
+        foreach ($proyectos as $p) {
+            $sheet->setCellValue("A$row", $p['id']);
+            $sheet->setCellValue("B$row", $p['nombre']);
+            $sheet->setCellValue("C$row", $p['descripcion']);
+            $sheet->setCellValue("D$row", $p['estado']);
+            $sheet->setCellValue("E$row", $p['fecha_inicio']);
+            $sheet->setCellValue("F$row", $p['fecha_fin']);
+            $row++;
+        }
+
+        // Exportar
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="proyectos.xlsx"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save("php://output");
+    }
 }
 
-$conn->close();
-?>
+// --- Router simple ---
+$accion = $_GET['accion'] ?? '';
+$controller = new InformeController();
+
+switch ($accion) {
+    case 'proyectos_pdf':
+        $controller->proyectosPDF();
+        break;
+    case 'proyectos_excel':
+        $controller->proyectosExcel();
+        break;
+    default:
+        echo "Acción no válida";
+}

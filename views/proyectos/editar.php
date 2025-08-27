@@ -1,28 +1,37 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
+require_once __DIR__ . "/../../config/auth.php";
+requireRole(["administrador", "gestor"]);
+require_once __DIR__ . "/../../models/Proyecto.php";
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
+$proyectoModel = new Proyecto();
+$proyecto = $proyectoModel->obtenerPorId($_GET['id']);
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Proyecto</title>
+</head>
+<body>
+    <h2>Editar Proyecto</h2>
+    <form method="POST" action="../../controllers/ProyectoController.php?accion=editar&id=<?= $proyecto['id'] ?>">
+        <input type="text" name="nombre" value="<?= $proyecto['nombre'] ?>" required><br>
+        <textarea name="descripcion"><?= $proyecto['descripcion'] ?></textarea><br>
+        <label>Fecha Inicio</label><input type="date" name="fecha_inicio" value="<?= $proyecto['fecha_inicio'] ?>"><br>
+        <label>Fecha Fin</label><input type="date" name="fecha_fin" value="<?= $proyecto['fecha_fin'] ?>"><br>
+        <label>ID Gestor</label><input type="number" name="gestor_id" value="<?= $proyecto['gestor_id'] ?>"><br>
+        <label>ID Cliente</label><input type="number" name="cliente_id" value="<?= $proyecto['cliente_id'] ?>"><br>
+        <label>Presupuesto</label><input type="number" step="0.01" name="presupuesto" value="<?= $proyecto['presupuesto'] ?>"><br>
+        <label>Estado</label>
+        <select name="estado">
+            <option <?= $proyecto['estado']=="planificacion"?"selected":"" ?>>planificacion</option>
+            <option <?= $proyecto['estado']=="activo"?"selected":"" ?>>activo</option>
+            <option <?= $proyecto['estado']=="en_pausa"?"selected":"" ?>>en_pausa</option>
+            <option <?= $proyecto['estado']=="completado"?"selected":"" ?>>completado</option>
+            <option <?= $proyecto['estado']=="cancelado"?"selected":"" ?>>cancelado</option>
+        </select><br>
+        <button type="submit">Actualizar</button>
+    </form>
+    <a href="listar.php">Volver</a>
+</body>
+</html>

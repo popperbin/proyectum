@@ -1,28 +1,19 @@
 <?php
-$servername = "localhost";
-$username   = "root";
-$password   = "123456"; // la que configuraste en phpMyAdmin
-$dbname     = "proyectumdb";
-
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$sql = "SELECT id, name, email FROM users";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "<h2>Usuarios en la base de datos:</h2>";
-    while($row = $result->fetch_assoc()) {
-        echo "ID: " . $row["id"]. " - Nombre: " . $row["name"]. " - Email: " . $row["email"]. "<br>";
-    }
-} else {
-    echo "0 resultados";
-}
-
-$conn->close();
+require_once __DIR__ . "/../../config/auth.php";
+requireRole(["administrador", "gestor"]);
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Informes</title>
+</head>
+<body>
+    <h2>📊 Generar Informes de Proyectos</h2>
+    <ul>
+        <li><a href="../../controllers/InformeController.php?accion=proyectos_pdf">📄 Descargar PDF</a></li>
+        <li><a href="../../controllers/InformeController.php?accion=proyectos_excel">📑 Descargar Excel</a></li>
+    </ul>
+</body>
+</html>
+
