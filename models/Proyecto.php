@@ -24,13 +24,15 @@ class Proyecto {
     }
 
     public function crear($data) {
-        $sql = "INSERT INTO proyectos (nombre, descripcion, fecha_inicio, fecha_fin, gestor_id, cliente_id, presupuesto) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO proyectos (nombre, descripcion, fecha_inicio, fecha_fin, estado, gestor_id, cliente_id, presupuesto) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
         return $this->db->execute($sql, [
             $data['nombre'],
             $data['descripcion'],
             $data['fecha_inicio'],
             $data['fecha_fin'],
+            $data['estado'] ?? 'planificacion',
             $data['gestor_id'],
             $data['cliente_id'],
             $data['presupuesto']
@@ -38,7 +40,8 @@ class Proyecto {
     }
 
     public function actualizar($id, $data) {
-        $sql = "UPDATE proyectos SET nombre=?, descripcion=?, fecha_inicio=?, fecha_fin=?, gestor_id=?, cliente_id=?, presupuesto=?, estado=? 
+        $sql = "UPDATE proyectos 
+                SET nombre=?, descripcion=?, fecha_inicio=?, fecha_fin=?, gestor_id=?, cliente_id=?, presupuesto=?, estado=? 
                 WHERE id=?";
         return $this->db->execute($sql, [
             $data['nombre'],

@@ -12,6 +12,13 @@
         <textarea name="descripcion" placeholder="Descripción"></textarea><br>
         <label>Fecha Inicio</label><input type="date" name="fecha_inicio"><br>
         <label>Fecha Fin</label><input type="date" name="fecha_fin"><br>
+        <label>Estado</label>
+        <select name="estado">
+            <option value="planificacion">Planificación</option>
+            <option value="activo">Activo</option>
+            <option value="en_pausa">En pausa</option>
+            <option value="completado">Completado</option>
+        <select><br>
         <label>ID Gestor</label><input type="number" name="gestor_id"><br>
         <label>ID Cliente</label><input type="number" name="cliente_id"><br>
         <label>Presupuesto</label><input type="number" step="0.01" name="presupuesto"><br>

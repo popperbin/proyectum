@@ -23,7 +23,9 @@ class ProyectoController {
 
     public function __construct() {
         $this->proyectoModel = new Proyecto();
+        if (session_status() === PHP_SESSION_NONE) {
         session_start();
+        }
     }
 
     public function listar() {
@@ -36,19 +38,19 @@ class ProyectoController {
     }
 
     public function crear($data) {
-        requireRole(["administrador", "gestor"]);
+        requireRole(["gestor"]);
         $this->proyectoModel->crear($data);
         header("Location: ../views/proyectos/listar.php");
     }
 
     public function editar($id, $data) {
-        requireRole(["administrador", "gestor"]);
+        requireRole(["gestor"]);
         $this->proyectoModel->actualizar($id, $data);
         header("Location: ../views/proyectos/listar.php");
     }
 
     public function eliminar($id) {
-        requireRole(["administrador", "gestor"]);
+        requireRole(["gestor"]);
         $this->proyectoModel->eliminar($id);
         header("Location: ../views/proyectos/listar.php");
     }

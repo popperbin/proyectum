@@ -16,7 +16,6 @@ $rol = $usuario['rol'];
 <head>
     <meta charset="UTF-8">
     <title>Dashboard - Proyectum</title>
-    <link rel="stylesheet" href="assets/css/estilos.css">
 </head>
 <body>
     <header>
@@ -31,7 +30,7 @@ $rol = $usuario['rol'];
                 <li><a href="views/usuarios/listar.php">👤 Gestión de Usuarios</a></li>
             <?php endif; ?>
 
-            <?php if ($rol === "gestor" || $rol === "administrador"): ?>
+            <?php if ($rol === "gestor"): ?>
                 <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
                 <li><a href="views/tareas/tablero.php">✅ Tareas</a></li>
                 <li><a href="views/riesgos/listar.php">⚠️ Riesgos</a></li>

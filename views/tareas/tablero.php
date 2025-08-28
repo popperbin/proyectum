@@ -5,6 +5,10 @@ require_once __DIR__ . "/../../config/auth.php";
 requireRole(["gestor","administrador","colaborador"]);
 
 $proyecto_id = $_GET['proyecto_id'];
+    if (!$proyecto_id) {
+        echo "<p style = 'color:red;'>ID de proyecto no proporcionado.";
+        exit;
+}
 $controller = new TareaController();
 $tareas = $controller->listar($proyecto_id);
 

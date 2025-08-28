@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . "/../models/Usuario.php";
 
+if (!class_exists('Usuario')) {
+    die("Error: La clase Usuario no está definida. Verifique que el archivo models/Usuario.php exista y sea correcto.");
+}
 class UsuarioController {
     private $usuarioModel;
 
@@ -8,6 +11,30 @@ class UsuarioController {
         $this->usuarioModel = new Usuario();
         session_start();
     }
+
+    public function actualizar($id, $data) {
+        return $this->usuarioModel->actualizar($id, $data);
+    }
+
+    public function eliminar($id) {
+        return $this->usuarioModel->eliminar($id);
+    }
+
+    public function listar() {
+        return $this->usuarioModel->listar();
+    }
+
+    public function crear($data) {
+        return $this->usuarioModel->registrar(
+            $data['nombres'],
+            $data['apellidos'],
+            $data['cedula'],
+            $data['email'],
+            $data['password'],
+            $data['rol']
+        );
+    }
+
 
     public function login($email, $password) {
         $usuario = $this->usuarioModel->login($email, $password);
@@ -20,17 +47,6 @@ class UsuarioController {
             header("Location: ../index.php");
             exit();
         }
-    }
-
-    public function registrar($data) {
-        return $this->usuarioModel->registrar(
-            $data['nombres'],
-            $data['apellidos'],
-            $data['cedula'],
-            $data['email'],
-            $data['password'],
-            $data['rol'] ?? "cliente"
-        );
     }
 
     public function logout() {
@@ -51,10 +67,24 @@ if (isset($_GET['accion'])) {
             }
             break;
 
-        case 'registrar':
+        case 'actualizar':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->registrar($_POST);
-                header("Location: ../views/usuarios/login.php");
+                $controller->actualizar($_POST['id'], $_POST);
+                header("Location: ../views/usuarios/listar.php");
+            }
+            break;
+
+        case 'crear':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->crear($_POST);
+                header("Location: ../views/usuarios/listar.php");
+            }
+            break;
+
+        case 'eliminar':
+            if (isset($_GET['id'])) {
+                $controller->eliminar($_GET['id']);
+                header("Location: ../views/usuarios/listar.php");
             }
             break;
 
