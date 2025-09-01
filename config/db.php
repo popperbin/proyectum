@@ -51,6 +51,8 @@ class Database {
             return $stmt;
         } catch (PDOException $e) {
             error_log("Error en consulta SQL: " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Params: " . print_r($params, true));
             throw new Exception("Error en la consulta a la base de datos");
         }
     }
@@ -79,6 +81,9 @@ class Database {
             return $stmt->execute($params);
         } catch (Exception $e) {
             error_log("DB ERROR: " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Params: " . print_r($params, true));
+
             throw new Exception("Error en la consulta a la base de datos");
         }
     }

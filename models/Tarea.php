@@ -5,35 +5,66 @@ class Tarea {
     private $db;
 
     public function __construct() {
-        $this->db = Database::getInstance(); // ✅ Usamos Singleton
+        $this->db = Database::getInstance();
     }
 
-    public function listarPorProyecto($proyecto_id) {
-        $sql = "SELECT t.*, u.nombres as responsable 
-                FROM tareas t 
-                JOIN usuarios u ON t.responsable_id = u.id 
-                WHERE proyecto_id = ?";
-        return $this->db->fetchAll($sql, [$proyecto_id]);
+    // Tareas de una lista
+    public function listarPorLista($lista_id) {
+        $sql = "SELECT t.*, u.nombres AS asignado_nombre
+                FROM tareas t
+                LEFT JOIN usuarios u ON t.asignado_a = u.id
+                WHERE t.lista_id = ?
+                ORDER BY t.id ASC";
+        return $this->db->fetchAll($sql, [$lista_id]);
     }
 
-    public function crear($data) {
-        $sql = "INSERT INTO tareas 
-                (proyecto_id, titulo, descripcion, responsable_id, fecha_inicio, fecha_fin, estado, prioridad)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        return $this->db->insert($sql, [
-            $data['proyecto_id'],
-            $data['titulo'],
-            $data['descripcion'],
-            $data['responsable_id'],
-            $data['fecha_inicio'],
-            $data['fecha_fin'],
-            $data['estado'],
-            $data['prioridad']
+    // Crear tarea (incluye proyecto_id y lista_id)
+public function crear($data) {
+    $sql = "INSERT INTO tareas 
+        (nombre, descripcion, proyecto_id, lista_id, asignado_a, fecha_inicio, fecha_fin, estado, prioridad) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    return $this->db->insert($sql, [
+        $data['nombre'],
+        $data['descripcion'] ?? null,
+        $data['proyecto_id'],
+        $data['lista_id'],
+        $data['asignado_a'] ?? null,
+        $data['fecha_inicio'] ?? null,
+        $data['fecha_fin'] ?? null,
+        $data['estado'] ?? 'pendiente',
+        $data['prioridad'] ?? 'media'
+    ]);
+}
+
+
+    // Editar tarea
+    public function editar($id, $data) {
+        $sql = "UPDATE tareas
+                SET nombre = ?, descripcion = ?, asignado_a = ?, fecha_inicio = ?, fecha_fin = ?, estado = ?, lista_id = ?, prioridad = ?
+                WHERE id = ?";
+
+        return $this->db->execute($sql, [
+            $data['nombre'],
+            $data['descripcion'] ?? null,
+            $data['asignado_a'] ?? null,
+            $data['fecha_inicio'] ?? null,
+            $data['fecha_fin'] ?? null,
+            $data['estado'] ?? 'pendiente',
+            $data['lista_id'] ?? null,
+            $data['prioridad'] ?? 'media',
+            $id
         ]);
     }
 
-    public function actualizarEstado($id, $estado) {
-        $sql = "UPDATE tareas SET estado=? WHERE id=?";
-        return $this->db->execute($sql, [$estado, $id]);
+    // Mover tarea entre listas (drag & drop)
+    public function mover($id, $nueva_lista_id) {
+        $sql = "UPDATE tareas SET lista_id = ? WHERE id = ?";
+        return $this->db->execute($sql, [$nueva_lista_id, $id]);
+    }
+
+    public function eliminar($id) {
+        $sql = "DELETE FROM tareas WHERE id = ?";
+        return $this->db->execute($sql, [$id]);
     }
 }

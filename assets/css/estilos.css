@@ -542,3 +542,41 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }                   
+
+.tablero {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+.lista {
+    background: #f4f4f4;
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 220px;
+    max-width: 250px;
+    flex-shrink: 0;
+}
+
+.lista h3 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.tareas {
+    min-height: 150px;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    background: white;
+    margin-bottom: 10px;
+}
+
+.tarea {
+    background: #e6f0ff;
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    cursor: grab;
+}

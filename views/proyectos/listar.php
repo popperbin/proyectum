@@ -36,8 +36,9 @@ $usuario = $_SESSION['usuario'];
                 <td><?= $p['estado'] ?></td>
                 <td>
                     <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-                        <a href="editar.php?id=<?= $p['id'] ?>">✏️</a>
-                        <a href="../../controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>">🗑️</a>
+                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>"> Tareas 📋</a>
+                        <a href="editar.php?id=<?= $p['id'] ?>">Editar ✏️</a>
+                        <a href="../../controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>">Eliminar 🗑️</a>
                     <?php endif; ?>
                 </td>
             </tr>
