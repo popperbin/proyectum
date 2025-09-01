@@ -15,7 +15,9 @@ $usuario = $_SESSION['usuario'];
 </head>
 <body>
     <h2>Proyectos</h2>
+    <a href="../../dashboard.php">⬅ Volver a proyectos</a>
     <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
+        
         <a href="crear.php">+ Crear Proyecto</a>
     <?php endif; ?>
     <table border="1" cellpadding="5">
@@ -39,7 +41,15 @@ $usuario = $_SESSION['usuario'];
                         <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>"> Tareas 📋</a>
                         <a href="editar.php?id=<?= $p['id'] ?>">Editar ✏️</a>
                         <a href="../../controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>">Eliminar 🗑️</a>
-                    <?php endif; ?>
+                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">Informes 📑</a>
+
+                    <?php elseif ($usuario['rol'] === "colaborador"):?>
+                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>"> Mis Tareas 📌</a>
+
+                    <?php elseif ($usuario['rol'] === "cliente"): ?>
+                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">Informes 📑</a>
+                    <?php endif; ?>   
+                  
                 </td>
             </tr>
         <?php endforeach; ?>

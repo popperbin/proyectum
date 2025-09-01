@@ -10,32 +10,35 @@ class Tarea {
 
     // Tareas de una lista
     public function listarPorLista($lista_id) {
-        $sql = "SELECT t.*, u.nombres AS asignado_nombre
-                FROM tareas t
-                LEFT JOIN usuarios u ON t.asignado_a = u.id
-                WHERE t.lista_id = ?
-                ORDER BY t.id ASC";
-        return $this->db->fetchAll($sql, [$lista_id]);
+        return $this->db->fetchAll(
+            "SELECT t.*, CONCAT(u.nombres, ' ', u.apellidos) AS asignado_nombre
+            FROM tareas t
+            LEFT JOIN usuarios u ON t.asignado_a = u.id
+            WHERE t.lista_id = ?
+            ORDER BY t.id ASC",
+    [$lista_id]
+        );
+        
     }
 
     // Crear tarea (incluye proyecto_id y lista_id)
-public function crear($data) {
-    $sql = "INSERT INTO tareas 
-        (nombre, descripcion, proyecto_id, lista_id, asignado_a, fecha_inicio, fecha_fin, estado, prioridad) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public function crear($data) {
+        $sql = "INSERT INTO tareas 
+            (nombre, descripcion, proyecto_id, lista_id, asignado_a, fecha_inicio, fecha_fin, estado, prioridad, fecha_creacion) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
-    return $this->db->insert($sql, [
-        $data['nombre'],
-        $data['descripcion'] ?? null,
-        $data['proyecto_id'],
-        $data['lista_id'],
-        $data['asignado_a'] ?? null,
-        $data['fecha_inicio'] ?? null,
-        $data['fecha_fin'] ?? null,
-        $data['estado'] ?? 'pendiente',
-        $data['prioridad'] ?? 'media'
-    ]);
-}
+        return $this->db->insert($sql, [
+            $data['nombre'],
+            $data['descripcion'] ?? null,
+            $data['proyecto_id'],
+            $data['lista_id'],
+            !empty($data['asignado_a']) ? $data['asignado_a'] : null,
+            $data['fecha_inicio'] ?? null,
+            $data['fecha_fin'] ?? null,
+            $data['estado'] ?? 'pendiente',
+            $data['prioridad'] ?? 'media'
+        ]);
+    }
 
 
     // Editar tarea

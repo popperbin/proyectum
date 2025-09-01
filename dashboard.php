@@ -32,17 +32,16 @@ $rol = $usuario['rol'];
 
             <?php if ($rol === "gestor"): ?>
                 <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
-                <li><a href="views/tareas/tablero.php">✅ Tareas</a></li>
                 <li><a href="views/riesgos/listar.php">⚠️ Riesgos</a></li>
                 <li><a href="views/informes/generar.php">📊 Informes</a></li>
             <?php endif; ?>
 
             <?php if ($rol === "colaborador"): ?>
-                <li><a href="views/tareas/tablero.php">📌 Mis Tareas</a></li>
+                <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
             <?php endif; ?>
 
             <?php if ($rol === "cliente"): ?>
-                <li><a href="views/informes/listar.php">📑 Informes</a></li>
+                <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
             <?php endif; ?>
         </ul>
     </nav>

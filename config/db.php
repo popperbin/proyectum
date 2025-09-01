@@ -6,6 +6,7 @@
 
 class Database {
     private $host = 'localhost';
+    private $port = '3307';
     private $dbname = 'proyectum';  // 👈 nombre de la BD que importaste en PhpMyAdmin
     private $username = 'root';     // 👈 en XAMPP es root por defecto
     private $password = '';         // 👈 en XAMPP root no tiene contraseña por defecto
@@ -14,7 +15,7 @@ class Database {
     private $pdo;
 
     private function __construct() {
-        $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset={$this->charset}";
+        $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->dbname};charset={$this->charset}";
         
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -50,10 +51,12 @@ class Database {
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            error_log("Error en consulta SQL: " . $e->getMessage());
-            error_log("SQL: " . $sql);
-            error_log("Params: " . print_r($params, true));
-            throw new Exception("Error en la consulta a la base de datos");
+            echo "<pre>";
+            echo "Error PDO " . $e->getMessage();
+            echo "SQL " . $sql . "\n";
+            echo "params " . print_r($params, true);
+            echo "</pre>";
+            exit();
         }
     }
 
@@ -66,27 +69,33 @@ class Database {
     }
 
     public function insert($sql, $params = []) {
-        $this->query($sql, $params);
-        return $this->pdo->lastInsertId();
-    }
-
-    public function execute($sql, $params = []) {
         try {
-            $stmt = $this->pdo->prepare($sql);
-            
-            // 🔎 DEBUG: mostrar la consulta y parámetros
-            error_log("SQL: " . $sql);
-            error_log("Params: " . print_r($params, true));
-            
-            return $stmt->execute($params);
-        } catch (Exception $e) {
-            error_log("DB ERROR: " . $e->getMessage());
-            error_log("SQL: " . $sql);
-            error_log("Params: " . print_r($params, true));
+            // Debug: imprimir SQL y parámetros
+            error_log("SQL a ejecutar: " . $sql);
+            error_log("Parámetros: " . print_r($params, true));
 
-            throw new Exception("Error en la consulta a la base de datos");
+            $this->query($sql, $params);
+            return $this->pdo->lastInsertId();
+        } catch (Exception $e) {
+            error_log("ERROR INSERT: " . $e->getMessage());
+            throw $e;
         }
     }
+
+
+    public function execute($sql, $params = []) {
+    try {
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
+    } catch (PDOException $e) {
+        error_log("Error en ejecución SQL: " . $e->getMessage());
+        error_log("SQL: " . $sql);
+        error_log("Params: " . print_r($params, true));
+        throw new Exception("Error al ejecutar la consulta en la base de datos");
+    }
+}
+
+
 }
 
 // Helper global

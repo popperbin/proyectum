@@ -1,76 +1,94 @@
 <?php
-require_once __DIR__ . "/../config/auth.php";
-requireRole(["administrador", "gestor"]);
-
+require_once __DIR__ . "/../models/Informe.php";
 require_once __DIR__ . "/../models/Proyecto.php";
-
+require_once __DIR__ . "/../config/auth.php";
+require_once __DIR__ . "/../vendor/autoload.php"; // <-- IMPORTANTE
 use Dompdf\Dompdf;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+requireLogin();
 
 class InformeController {
+    private $informeModel;
+    private $proyectoModel;
 
-    public function proyectosPDF() {
-        $proyectos = Proyecto::listar();
-
-        ob_start();
-        include __DIR__ . "/../views/informes/proyectos_pdf.php";
-        $html = ob_get_clean();
-
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-        $dompdf->stream("proyectos.pdf", ["Attachment" => true]);
+    public function __construct() {
+        $this->informeModel = new Informe();
+        $this->proyectoModel = new Proyecto();
     }
 
-    public function proyectosExcel() {
-        $proyectos = Proyecto::listar();
+    public function listar($proyecto_id) {
+        $informes = $this->informeModel->listarPorProyecto($proyecto_id);
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        // echo"<pre>DEBUG: " print_r($informes); echo "</pre>";
+        require "../views/informes/listar.php";
+    }
 
-        // Encabezados
-        $sheet->setCellValue('A1', 'ID');
-        $sheet->setCellValue('B1', 'Nombre');
-        $sheet->setCellValue('C1', 'Descripción');
-        $sheet->setCellValue('D1', 'Estado');
-        $sheet->setCellValue('E1', 'Fecha Inicio');
-        $sheet->setCellValue('F1', 'Fecha Fin');
+    public function crear($data) {
+        requireRole(["gestor"]);
 
-        // Datos
-        $row = 2;
-        foreach ($proyectos as $p) {
-            $sheet->setCellValue("A$row", $p['id']);
-            $sheet->setCellValue("B$row", $p['nombre']);
-            $sheet->setCellValue("C$row", $p['descripcion']);
-            $sheet->setCellValue("D$row", $p['estado']);
-            $sheet->setCellValue("E$row", $p['fecha_inicio']);
-            $sheet->setCellValue("F$row", $p['fecha_fin']);
-            $row++;
+        $usuario_id = $_SESSION['usuario']['id'];
+        $proyecto = $this->proyectoModel->obtenerPorId($data['proyecto_id']);
+
+        // Generar PDF
+        $dompdf = new Dompdf();
+        $html = "<h1>{$data['titulo']}</h1>
+                 <p>{$data['contenido']}</p>
+                 <p>Proyecto: {$proyecto['nombre']}</p>";
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = "informes/informe_".time().".pdf";
+        file_put_contents("../".$filename, $dompdf->output());
+
+        // Guardar en DB
+        $this->informeModel->crear([
+            'proyecto_id' => $data['proyecto_id'],
+            'titulo' => $data['titulo'],
+            'contenido' => $data['contenido'] ?? null,
+            'tipo' => $data['tipo'] ?? 'progreso',
+            'archivo_pdf' => $filename,
+            'generado_por' => $usuario_id
+        ]);
+
+        header("Location: ../views/informes/listar.php?proyecto_id=" . $data['proyecto_id']);
+        exit();
+    }
+
+    public function eliminar($id, $proyecto_id) {
+        requireRole(["gestor"]);
+        $informe = $this->informeModel->obtenerPorId($id);
+        if ($informe && $informe['archivo_pdf'] && file_exists("../".$informe['archivo_pdf'])) {
+            unlink("../".$informe['archivo_pdf']);
         }
-
-        // Exportar
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="proyectos.xlsx"');
-        header('Cache-Control: max-age=0');
-
-        $writer = new Xlsx($spreadsheet);
-        $writer->save("php://output");
+        $this->informeModel->eliminar($id);
+        header("Location: ../views/informes/listar.php?proyecto_id=" . $proyecto_id);
+        exit();
     }
 }
 
-// --- Router simple ---
-$accion = $_GET['accion'] ?? '';
+// --- Router básico ---
 $controller = new InformeController();
 
-switch ($accion) {
-    case 'proyectos_pdf':
-        $controller->proyectosPDF();
-        break;
-    case 'proyectos_excel':
-        $controller->proyectosExcel();
-        break;
-    default:
-        echo "Acción no válida";
+if (isset($_GET['accion'])) {
+    switch ($_GET['accion']) {
+        case 'crear':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->crear($_POST);
+            }
+            break;
+
+        case 'eliminar':
+            if (isset($_GET['id'], $_GET['proyecto_id'])) {
+                $controller->eliminar($_GET['id'], $_GET['proyecto_id']);
+            }
+            break;
+
+        case 'listar':
+            if (isset($_GET['proyecto_id'])) {
+                $controller->listar($_GET['proyecto_id']);
+            }
+            break;
+    }
 }
+

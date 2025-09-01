@@ -4,6 +4,7 @@ requireLogin();
 
 require_once __DIR__ . "/../../models/Lista.php";
 require_once __DIR__ . "/../../models/Tarea.php";
+require_once __DIR__ . "/../../models/Proyecto.php";
 
 $proyecto_id = $_GET['proyecto_id'] ?? null;
 if (!$proyecto_id) {
@@ -12,9 +13,20 @@ if (!$proyecto_id) {
 
 $listaModel = new Lista();
 $tareaModel = new Tarea();
+$proyectoModel = new Proyecto();
+
+//obtener informacion del proyecto
+$proyecto = $proyectoModel->obtenerPorId($proyecto_id);
+if (!$proyecto) {
+    die("Proyecto no encontrado");
+}
 
 // Obtener listas y tareas del proyecto
 $listas = $listaModel->listarPorProyecto($proyecto_id);
+
+//obtener colaboradores del proyecto seleccionado
+$colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -24,64 +36,63 @@ $listas = $listaModel->listarPorProyecto($proyecto_id);
     <link rel="stylesheet" href="../../assets/css/estilos.css">
 </head>
 <body>
-    <h2>Tablero de Proyecto <?= htmlspecialchars($proyecto_id) ?></h2>
-    <a href="../proyectos/listar.php">⬅ Volver a proyectos</a>
+    <nav>
+        <h2>Tablero de Proyecto <?= htmlspecialchars($proyecto['nombre']) ?></h2>
+        <a href="../proyectos/listar.php">⬅ Volver a proyectos</a>
+    </nav>
+
 
     <div class="tablero">
         <?php foreach ($listas as $lista): ?>
-            <div class="lista" data-lista-id="<?= $lista['id'] ?>">
+                        <div class="lista" data-lista-id="<?= $lista['id'] ?>">
                 <h3><?= htmlspecialchars($lista['nombre']) ?></h3>
 
                 <div class="tareas" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <?php foreach ($tareaModel->listarPorLista($lista['id']) as $tarea): ?>
                         <div class="tarea" draggable="true" ondragstart="drag(event)" data-id="<?= $tarea['id'] ?>">
                             <strong><?= htmlspecialchars($tarea['nombre']) ?></strong><br>
-                            <small><?= htmlspecialchars($tarea['descripcion'] ?? '') ?></small>
+                            <?php if (!empty($tarea['descripcion'])): ?>
+                                <small><?= htmlspecialchars($tarea['descripcion']) ?></small><br>
+                            <?php endif; ?>
                             <?php if (!empty($tarea['asignado_nombre'])): ?>
                                 <div><small>👤 <?= htmlspecialchars($tarea['asignado_nombre']) ?></small></div>
                             <?php endif; ?>
+                            <?php if (!empty($tarea['fecha_fin'])): ?>
+                                <div><small>📅 <?= date('d/m/Y', strtotime($tarea['fecha_fin'])) ?></small></div>
+                            <?php endif; ?>
                             <div class="acciones">
-                                <a href="../../controllers/TareaController.php?accion=eliminar&id=<?= $tarea['id'] ?>&proyecto_id=<?= $proyecto_id ?>">🗑️</a>
+                                <a href="../../controllers/TareaController.php?accion=eliminar&id=<?= $tarea['id'] ?>&proyecto_id=<?= $proyecto_id ?>" 
+                                   onclick="return confirm('¿Eliminar esta tarea?')">🗑️</a>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Crear tarea rápida -->
-                <button onclick="document.getElementById('form-tarea').style.display='block'">+ Añadir tarea</button>
+                <!-- Botón para mostrar formulario -->
+                <button onclick="mostrarFormulario(<?= $lista['id'] ?>)">+ Añadir tarea</button>
 
-                <div id="form-tarea" style="display:none; border:1px solid #ccc; padding:10px; margin:10px;">
+                <!-- Formulario de tarea para esta lista específica -->
+                <div id="form-tarea-<?= $lista['id'] ?>" class="form-tarea">
                     <form method="POST" action="../../controllers/TareaController.php?accion=crear">
                         <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
                         <input type="hidden" name="lista_id" value="<?= $lista['id'] ?>">
 
-                        <label>Nombre:</label><br>
-                        <input type="text" name="nombre" required><br>
+                        <label>Nombre de la tarea:</label>
+                        <input type="text" name="nombre" required>
 
-                        <label>Descripción:</label><br>
-                        <textarea name="descripcion"></textarea><br>
+                        <label>Descripción:</label>
+                        <textarea name="descripcion" rows="3"></textarea>
 
-                        <label>Responsable:</label><br>
+                        <label>Asignar a:</label>
                         <select name="asignado_a">
-                            <option value="">-- Seleccionar --</option>
-                            <?php foreach ($usuarios as $u): ?>
-                                <option value="<?= $u['id'] ?>"><?= $u['nombres'] . " " . $u['apellidos'] ?></option>
+                            <option value="">-- Sin asignar --</option>
+                            <?php foreach ($colaboradores as $colab): ?>
+                                <option value="<?= $colab['id'] ?>"><?= htmlspecialchars($colab['nombres'] . " " . $colab['apellidos']) ?></option>
                             <?php endforeach; ?>
-                        </select><br>
+                        </select>
 
-                        <label>Fecha inicio:</label>
-                        <input type="date" name="fecha_inicio"><br>
-
-                        <label>Fecha fin:</label>
-                        <input type="date" name="fecha_fin"><br>
-
-                        <label>Estado:</label>
-                        <select name="estado">
-                            <option value="pendiente">Pendiente</option>
-                            <option value="en_progreso">En progreso</option>
-                            <option value="completado">Completado</option>
-                            <option value="cancelado">Cancelado</option>
-                        </select><br>
+                        <label>Fecha límite:</label>
+                        <input type="date" name="fecha_fin">
 
                         <label>Prioridad:</label>
                         <select name="prioridad">
@@ -89,12 +100,12 @@ $listas = $listaModel->listarPorProyecto($proyecto_id);
                             <option value="media" selected>Media</option>
                             <option value="alta">Alta</option>
                             <option value="urgente">Urgente</option>
-                        </select><br>
+                        </select>
 
-                        <button type="submit">Guardar</button>
-                        <button type="button" onclick="document.getElementById('form-tarea').style.display='none'">Cancelar</button>
-
-                        
+                        <div style="margin-top: 10px;">
+                            <button type="submit">Guardar Tarea</button>
+                            <button type="button" onclick="ocultarFormulario(<?= $lista['id'] ?>)">Cancelar</button>
+                        </div>
                     </form>
                 </div>
 

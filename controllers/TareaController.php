@@ -11,26 +11,40 @@ class TareaController {
 
     // Crear tarea
     public function crear($data) {
-    requireRole(["gestor"]);
-    if (empty($data['nombre'])) {
-        $_SESSION['error'] = "El nombre de la tarea es obligatorio.";
-        header("Location: ../views/tareas/tablero.php?proyecto_id=" . $data['proyecto_id']);
-        exit();
+        // Verificar que el rol tenga permiso
+        requireRole(["gestor"]);
+
+        // Validar campos obligatorios
+        if (empty($data['nombre']) || empty($data['proyecto_id']) || empty($data['lista_id'])) {
+            $_SESSION['error'] = "El nombre, proyecto y lista son obligatorios.";
+            header("Location: ../views/tareas/tablero.php?proyecto_id=" . ($data['proyecto_id'] ?? ''));
+            exit();
         }
 
-    $this->tareaModel->crear([
-        'proyecto_id' => $data['proyecto_id'],
-        'lista_id' => $data['lista_id'],
-        'nombre' => $data['nombre'],
-        'descripcion' => $data['descripcion'] ?? null,
-        'asignado_a' => $data['asignado_a'] ?? null,
-        'fecha_inicio' => $data['fecha_inicio'] ?? null,
-        'fecha_fin' => $data['fecha_fin'] ?? null,
-        'estado' => $data['estado'] ?? 'pendiente',
-        'prioridad' => $data['prioridad'] ?? 'media'
-    ]);
+        // Preparar datos para la inserción
+        $tareaData = [
+            'nombre'        => $data['nombre'],
+            'descripcion'   => $data['descripcion'] ?? null,
+            'proyecto_id'   => $data['proyecto_id'],
+            'lista_id'      => $data['lista_id'],
+            'asignado_a'    => $data['asignado_a'] ?? null,
+            'fecha_inicio'  => $data['fecha_inicio'] ?? null,
+            'fecha_fin'     => $data['fecha_fin'] ?? null,
+            'estado'        => $data['estado'] ?? 'pendiente',
+            'prioridad'     => $data['prioridad'] ?? 'media'
+        ];
 
+        // Insertar tarea usando el modelo
+        try {
+            $this->tareaModel->crear($tareaData);
+            $_SESSION['success'] = "Tarea creada correctamente.";
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error al crear la tarea: " . $e->getMessage();
+            echo $e->getMessage();
+            exit();
+        }
 
+        // Redirigir al tablero del proyecto
         header("Location: ../views/tareas/tablero.php?proyecto_id=" . $data['proyecto_id']);
         exit();
     }

@@ -23,3 +23,16 @@ function drop(ev) {
       .then(data => console.log("Respuesta:", data))
       .catch(err => console.error("Error:", err));
 }
+
+function mostrarFormulario(listaId) {
+    // Ocultar todos los formularios
+    document.querySelectorAll('.form-tarea').forEach(form => {
+        form.style.display = 'none';
+    });
+    // Mostrar el formulario específico
+    document.getElementById('form-tarea-' + listaId).style.display = 'block';
+}
+
+function ocultarFormulario(listaId) {
+    document.getElementById('form-tarea-' + listaId).style.display = 'none';
+}

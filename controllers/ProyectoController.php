@@ -28,6 +28,20 @@ class ProyectoController {
         }
     }
 
+    public function crearFormulario() {
+        requireRole(["gestor"]);
+
+        //obtener todos los gestores desde el modelo de usuario
+        $usuariosModel = new Usuario();
+        $gestores = $usuariosModel->obtenerGestores();
+
+        //gestor logueado por defecto
+        $gestorLogueado = $_SESSION['usuario']['id'];
+
+        //cargar la vista pasando los datos
+        require "../views/proyectos/crear.php";
+    }
+
     public function listar() {
         $usuario = $_SESSION['usuario'];
         if ($usuario['rol'] === "cliente") {
@@ -39,6 +53,11 @@ class ProyectoController {
 
     public function crear($data) {
         requireRole(["gestor"]);
+
+        if (empty($data['gestor_id'])) {
+            $data['gestor_id'] = $_SESSION['usuario']['id'];
+        }
+        
         $this->proyectoModel->crear($data);
         header("Location: ../views/proyectos/listar.php");
     }

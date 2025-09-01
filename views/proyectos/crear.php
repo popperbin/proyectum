@@ -19,9 +19,18 @@
             <option value="en_pausa">En pausa</option>
             <option value="completado">Completado</option>
         <select><br>
-        <label>ID Gestor</label><input type="number" name="gestor_id"><br>
+        <label>Gestor</label>
+            <select name="gestor_id">
+                <?php foreach($gestores as $gestor): ?>
+                    <option value="<?= $gestor["id"] ?>"
+                        <?= ($gestor['id'] == $gestorLogueado) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($gestor['nombres'] . ' ' . $gestor['apellidos']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <br>
         <label>ID Cliente</label><input type="number" name="cliente_id"><br>
-        <label>Presupuesto</label><input type="number" step="0.01" name="presupuesto"><br>
+    
         <button type="submit">Guardar</button>
     </form>
     <a href="listar.php">Volver</a>

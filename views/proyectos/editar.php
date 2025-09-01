@@ -39,9 +39,6 @@ if (!$proyecto) {
     <label>ID Cliente</label>
     <input type="number" name="cliente_id" value="<?= $proyecto['cliente_id'] ?>"><br>
 
-    <label>Presupuesto</label>
-    <input type="number" step="0.01" name="presupuesto" value="<?= $proyecto['presupuesto'] ?>"><br>
-
     <label>Estado</label>
     <select name="estado">
         <option value="planificacion" <?= $proyecto['estado']=="planificacion"?"selected":"" ?>>Planificación</option>
