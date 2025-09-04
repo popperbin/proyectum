@@ -9,7 +9,6 @@ class UsuarioController {
 
     public function __construct() {
         $this->usuarioModel = new Usuario();
-        session_start();
     }
 
     public function actualizar($id, $data) {
@@ -40,7 +39,7 @@ class UsuarioController {
         $usuario = $this->usuarioModel->login($email, $password);
         if ($usuario) {
             $_SESSION['usuario'] = $usuario;
-            header("Location: ../dashboard.php");
+            header("Location: /proyectum/index.php?page=dashboard");
             exit();
         } else {
             $_SESSION['error'] = "Credenciales inválidas";

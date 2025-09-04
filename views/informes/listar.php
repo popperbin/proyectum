@@ -34,7 +34,6 @@ $rol = $usuario['rol'] ?? null;
 
     <div class="contenido">
         <?php if (empty($informes)): ?>
-            <div style="text-align: center; padding: 40px; color: #666;">
                 <h3>No hay informes generados</h3>
                 <p>Aún no se han creado informes para este proyecto.</p>
                 <?php if ($rol === "gestor" || $rol === "administrador"): ?>
