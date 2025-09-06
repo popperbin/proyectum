@@ -16,9 +16,7 @@ class Informe {
                 ORDER BY i.fecha_generacion DESC";
 
            $result = $this->db->fetchAll($sql, array($proyecto_id));
-    echo "<pre>DEBUG listarPorProyecto: ";
-    print_r($result);
-    echo "</pre>";
+
     return $result;
         
     }
@@ -29,15 +27,17 @@ class Informe {
 
     public function crear($data) {
         $sql = "INSERT INTO informes 
-                (proyecto_id, titulo, contenido, tipo, archivo_pdf, generado_por)
-                VALUES (?, ?, ?, ?, ?, ?)";
+                (proyecto_id, titulo, contenido, tipo, archivo_pdf, generado_por,comentarios,observaciones)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         return $this->db->insert($sql, [
             $data['proyecto_id'],
             $data['titulo'],
             $data['contenido'] ?? null,
             $data['tipo'] ?? 'progreso',
             $data['archivo_pdf'] ?? null,
-            $data['generado_por']
+            $data['generado_por'],
+            $data['comentarios'] ?? null,
+            $data['observaciones'] ?? null
         ]);
     }
 

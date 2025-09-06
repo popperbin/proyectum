@@ -25,11 +25,16 @@ class Proyecto {
         return $this->db->fetchOne("SELECT * FROM proyectos WHERE id = ?", [$id]);
     }
 
+    public function cambiarEstado($id, $estado) {
+        $sql = "UPDATE proyectos SET estado = ? WHERE id = ?";
+        return $this->db->execute($sql, [$estado, $id]);
+    }
+    
     public function crear($data) {
         $sql = "INSERT INTO proyectos (nombre, descripcion, fecha_inicio, fecha_fin, estado, gestor_id, cliente_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        return $this->db->insert($sql, [
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
+        $proyecto_id = $this->db->insert($sql, [
             $data['nombre'],
             $data['descripcion'],
             $data['fecha_inicio'],
@@ -42,6 +47,8 @@ class Proyecto {
         if ($proyecto_id) {
             $this->crearListasBasicas($proyecto_id);
         }
+
+        return $proyecto_id; 
     }
 
     public function actualizar($id, $data) {

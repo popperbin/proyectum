@@ -41,10 +41,8 @@ if (!$proyecto) {
 
     <label>Estado</label>
     <select name="estado">
-        <option value="planificacion" <?= $proyecto['estado']=="planificacion"?"selected":"" ?>>Planificación</option>
         <option value="activo" <?= $proyecto['estado']=="activo"?"selected":"" ?>>Activo</option>
-        <option value="en_pausa" <?= $proyecto['estado']=="en_pausa"?"selected":"" ?>>En pausa</option>
-        <option value="completado" <?= $proyecto['estado']=="completado"?"selected":"" ?>>Completado</option>
+        <option value="completado" <?= $proyecto['estado']=="inactivo"?"selected":"" ?>>Inactivo</option>
         <option value="cancelado" <?= $proyecto['estado']=="cancelado"?"selected":"" ?>>Cancelado</option>
     </select><br>
 

@@ -16,48 +16,70 @@ class InformeController {
         $this->proyectoModel = new Proyecto();
     }
 
-    public function listar($proyecto_id) {
-        $informes = $this->informeModel->listarPorProyecto($proyecto_id);
+    private function validarProyectoActivo($proyecto_id) {
+        $proyecto = $this->proyectoModel->obtenerPorId($proyecto_id);
 
-        // echo"<pre>DEBUG: " print_r($informes); echo "</pre>";
+        if (!$proyecto) {
+            die(" Proyecto no encontrado.");
+        }
+        if (strtolower(trim($proyecto['estado'])) !== 'activo') {
+            die(" Este proyecto está inactivo. No puedes realizar esta acción.");
+        }
+
+        return $proyecto;
+    }
+    /**
+     * Listar informes de un proyecto
+     */
+    public function listar($proyecto_id) {
+        $proyecto = $this->validarProyectoActivo($proyecto_id);
+        $informes = $this->informeModel->listarPorProyecto($proyecto_id);
         require "../views/informes/listar.php";
     }
 
-    public function crear($data) {
+  public function crear($data) {
         requireRole(["gestor"]);
 
         $usuario_id = $_SESSION['usuario']['id'];
-        $proyecto = $this->proyectoModel->obtenerPorId($data['proyecto_id']);
+        $proyecto = $this->validarProyectoActivo($data['proyecto_id']);
 
         // Generar PDF
         $dompdf = new Dompdf();
         $html = "<h1>{$data['titulo']}</h1>
-                 <p>{$data['contenido']}</p>
-                 <p>Proyecto: {$proyecto['nombre']}</p>";
+             <p>{$data['contenido']}</p>
+             <p>Proyecto: {$proyecto['nombre']}</p>
+             <p>{$data['comentarios']}</p>
+             <p>{$data['observaciones']}</p>";
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        $filename = "informes/informe_".time().".pdf";
-        file_put_contents("../".$filename, $dompdf->output());
-
-        // Guardar en DB
+        $nombreArchivo = "informe_" . time() . ".pdf";
+        $rutaArchivo   = "informes/" . $nombreArchivo; 
+        
         $this->informeModel->crear([
-            'proyecto_id' => $data['proyecto_id'],
-            'titulo' => $data['titulo'],
-            'contenido' => $data['contenido'] ?? null,
-            'tipo' => $data['tipo'] ?? 'progreso',
-            'archivo_pdf' => $filename,
-            'generado_por' => $usuario_id
+            "proyecto_id" => $data['proyecto_id'],
+            "titulo"      => $data['titulo'],
+            "contenido"   => $data['contenido'],
+            "tipo"        => $data['tipo'],
+            "archivo_pdf" => $rutaArchivo,
+            "generado_por"=> $usuario_id,
+            "comentarios" => $data['comentarios'],
+            "observaciones" => $data['observaciones']
         ]);
 
-        header("Location: ../views/informes/listar.php?proyecto_id=" . $data['proyecto_id']);
-        exit();
+        // Limpiar buffer y descargar
+        if (ob_get_length()) {
+         ob_end_clean();
+        }
+        $dompdf->stream(basename($nombreArchivo), ["Attachment" => true]);
+        exit;
     }
+
 
     public function eliminar($id, $proyecto_id) {
         requireRole(["gestor"]);
-        $informe = $this->informeModel->obtenerPorId($id);
+        $informe = $this->informeModel->validarProyectoActivo($id);
         if ($informe && $informe['archivo_pdf'] && file_exists("../".$informe['archivo_pdf'])) {
             unlink("../".$informe['archivo_pdf']);
         }
@@ -65,6 +87,32 @@ class InformeController {
         header("Location: ../views/informes/listar.php?proyecto_id=" . $proyecto_id);
         exit();
     }
+    public function descargar($id) {
+        $informe = $this->informeModel->obtenerPorId($id);
+        $proyecto = $this->validarProyectoActivo($informe['proyecto_id']);
+
+        if (!$informe) {
+            die("Informe no encontrado.");
+        }
+
+        // Generar el PDF con Dompdf
+        $dompdf = new Dompdf();
+        $html = "<h1>{$informe['titulo']}</h1>
+             <p><strong>Contenido:</strong> {$informe['contenido']}</p>
+             <p><strong>Proyecto:</strong> {$proyecto['nombre']}</p>
+             <p><strong>Comentarios:</strong> {$informe['comentarios']}</p>
+             <p><strong>Observaciones:</strong> {$informe['observaciones']}</p>
+             <p><small>Generado por usuario ID: {$informe['generado_por']}</small></p>";
+
+         $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Descargar directamente (sin guardarlo en servidor)
+        $dompdf->stream("informe_{$id}.pdf", ["Attachment" => true]);
+    exit;
+}
+
 }
 
 // --- Router básico ---
@@ -87,6 +135,11 @@ if (isset($_GET['accion'])) {
         case 'listar':
             if (isset($_GET['proyecto_id'])) {
                 $controller->listar($_GET['proyecto_id']);
+            }
+            break;
+        case 'descargar':
+            if (isset($_GET['id'])) {
+                $controller->descargar($_GET['id']);
             }
             break;
     }

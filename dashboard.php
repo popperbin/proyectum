@@ -33,7 +33,7 @@ $rol = $usuario['rol'];
             <?php if ($rol === "gestor"): ?>
                 <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
                 <li><a href="views/riesgos/listar.php">⚠️ Riesgos</a></li>
-                <li><a href="views/informes/generar.php">📊 Informes</a></li>
+                <li><a href="views/informes/listar.php">📊 Informes</a></li>
             <?php endif; ?>
 
             <?php if ($rol === "colaborador"): ?>

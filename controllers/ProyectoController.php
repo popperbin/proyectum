@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../models/Proyecto.php";
 require_once __DIR__ . "/../config/auth.php";
+require_once __DIR__ . "/../models/Usuario.php";
 
 $controller = new ProyectoController();
 
@@ -15,6 +16,20 @@ if (isset($_GET['accion'])) {
         case 'eliminar':
             $controller->eliminar($_GET['id']);
             break;
+        case 'inactivar':
+            if (isset($_GET['id'])) {
+                $controller->inactivar($_GET['id']);
+            }
+            break;
+        case 'activar':
+            if (isset($_GET['id'])) {
+                $controller->activar($_GET['id']);
+            }
+            break;
+        case 'formulario':
+            $controller->crearFormulario();
+            break;
+
     }
 }
 
@@ -31,10 +46,8 @@ class ProyectoController {
     public function crearFormulario() {
         requireRole(["gestor"]);
 
-        //obtener todos los gestores desde el modelo de usuario
         $usuariosModel = new Usuario();
-        $gestores = $usuariosModel->obtenerGestores();
-
+        $colaboradores = $usuariosModel->obtenerColaboradores();  
         //gestor logueado por defecto
         $gestorLogueado = $_SESSION['usuario']['id'];
 
@@ -50,17 +63,25 @@ class ProyectoController {
             return $this->proyectoModel->listarTodos();
         }
     }
-
     public function crear($data) {
         requireRole(["gestor"]);
 
-        if (empty($data['gestor_id'])) {
-            $data['gestor_id'] = $_SESSION['usuario']['id'];
+        // El gestor que está logueado
+        $data['gestor_id'] = $_SESSION['usuario']['id'];
+
+        // Crear proyecto y obtener su ID
+        $proyecto_id = $this->proyectoModel->crear($data);
+
+        // Asignar colaboradores al proyecto
+        if (!empty($data['colaboradores'])) {
+            foreach ($data['colaboradores'] as $colaborador_id) {
+                $this->proyectoModel->asignarColaborador($proyecto_id, $colaborador_id);
+            }
         }
-        
-        $this->proyectoModel->crear($data);
+
         header("Location: ../views/proyectos/listar.php");
     }
+
 
     public function editar($id, $data) {
         requireRole(["gestor"]);
@@ -71,6 +92,17 @@ class ProyectoController {
     public function eliminar($id) {
         requireRole(["gestor"]);
         $this->proyectoModel->eliminar($id);
+        header("Location: ../views/proyectos/listar.php");
+    }
+    public function inactivar($id) {
+        requireRole(["gestor"]);
+        $this->proyectoModel->cambiarEstado($id, "inactivo");
+        header("Location: ../views/proyectos/listar.php");
+    }
+
+    public function activar($id) {
+        requireRole(["gestor"]);
+        $this->proyectoModel->cambiarEstado($id, "activo");
         header("Location: ../views/proyectos/listar.php");
     }
 }

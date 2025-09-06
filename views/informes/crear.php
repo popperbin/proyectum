@@ -28,7 +28,7 @@ if (!$proyecto_id) {
             <label>Título del Informe:</label>
             <input type="text" name="titulo" required>
 
-            <label>Contenido / Comentarios:</label>
+            <label>Contenido:</label>
             <textarea name="contenido" rows="6"></textarea>
 
             <label>Tipo de Informe:</label>
@@ -38,6 +38,12 @@ if (!$proyecto_id) {
                 <option value="riesgos">Riesgos</option>
                 <option value="personalizado">Personalizado</option>
             </select>
+
+            <label> Comentarios:</label>
+            <textarea name="comentarios" rows="6"></textarea>
+
+            <label>Observaciones:</label>
+            <textarea name="observaciones" rows="6"></textarea>
 
             <div style="margin-top: 10px;">
                 <button type="submit">Generar PDF y Guardar</button>

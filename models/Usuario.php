@@ -46,6 +46,24 @@ class Usuario {
         $sql = "SELECT * FROM usuarios WHERE id = ?";
         return $this->db->fetchOne($sql, [$id]);
     }
+    /** 
+     * Obtener todos los colaboradores
+     */
+    public function obtenerColaboradores() {
+        $sql = "SELECT id, nombres, apellidos 
+            FROM usuarios 
+                WHERE TRIM(rol) = 'colaborador' 
+                    AND TRIM(estado) = 'activo'";
+    
+        $result = $this->db->fetchAll($sql);
+
+        echo "<pre>DEBUG obtenerColaboradores:\n";
+        var_dump($result);
+        echo "</pre>";
+
+        return $result;
+    }
+
 
     /**
      * Listar todos los usuarios
