@@ -18,19 +18,17 @@
             <option value="activo">Activo</option>
             <option value="en_pausa">En pausa</option>
             <option value="completado">Completado</option>
-        <select><br>
-        <label>Gestor</label>
-            <select name="gestor_id">
-                <?php foreach($gestores as $gestor): ?>
-                    <option value="<?= $gestor["id"] ?>"
-                        <?= ($gestor['id'] == $gestorLogueado) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($gestor['nombres'] . ' ' . $gestor['apellidos']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <br>
+        </select><br>
         <label>ID Cliente</label><input type="number" name="cliente_id"><br>
-    
+       <?php if (!empty($colaboradores)): ?>
+            <?php foreach ($colaboradores as $c): ?>
+                <input type="checkbox" name="colaboradores[]" value="<?= $c['id'] ?>">
+                <?= htmlspecialchars($c['nombres'] . ' ' . $c['apellidos']) ?><br>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p>No hay colaboradores disponibles.</p>
+        <?php endif; ?>
+
         <button type="submit">Guardar</button>
     </form>
     <a href="listar.php">Volver</a>

@@ -15,4 +15,5 @@
     </select><br>
 
     <button type="submit">Guardar</button>
+    <button type="submit">cancelar</button>
 </form>

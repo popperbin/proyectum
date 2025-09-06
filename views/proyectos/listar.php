@@ -38,18 +38,33 @@ $usuario = $_SESSION['usuario'];
                 <td><?= $p['estado'] ?></td>
                 <td>
                     <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>"> Tareas 📋</a>
+                    <?php if ($p['estado'] === 'activo'): ?>
+                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>">Tareas 📋</a>
                         <a href="editar.php?id=<?= $p['id'] ?>">Editar ✏️</a>
-                        <a href="../../controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>">Eliminar 🗑️</a>
-                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">Informes 📑</a>
+                        <a href="../../controllers/ProyectoController.php?accion=inactivar&id=<?= $p['id'] ?>"
+                            onclick="return confirm('¿Seguro que deseas inactivar este proyecto?');">
+                            Inactivar
+                        </a>
+                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">
+                            📑 Ver informes
+                        </a>
+                        <a href="../../controllers/RiesgoController.php?accion=listar&id_proyecto=<?= $p['id'] ?>">⚠️ Gestión de riesgos</a>
+                        <?php else: ?>
+                            <a href="../../controllers/ProyectoController.php?accion=activar&id=<?= $p['id'] ?>"
+                             onclick="return confirm('¿Quieres reactivar este proyecto?');">
+                                Activar
+                            </a>
+                        <?php endif; ?>
+                        <?php elseif ($usuario['rol'] === "colaborador"): ?>
+                            <?php if ($p['estado'] === 'activo'): ?>
+                                <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>">Mis Tareas 📌</a>
+                        <?php endif; ?>
+                        <?php elseif ($usuario['rol'] === "cliente"): ?>
+                            <?php if ($p['estado'] === 'activo'): ?>
+                                <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">Informes 📑</a>
+                        <?php endif; ?>
+                    <?php endif; ?>
 
-                    <?php elseif ($usuario['rol'] === "colaborador"):?>
-                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>"> Mis Tareas 📌</a>
-
-                    <?php elseif ($usuario['rol'] === "cliente"): ?>
-                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>">Informes 📑</a>
-                    <?php endif; ?>   
-                  
                 </td>
             </tr>
         <?php endforeach; ?>

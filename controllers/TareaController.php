@@ -52,7 +52,25 @@ class TareaController {
     // Editar tarea
     public function editar($id, $data) {
         requireRole(["gestor"]);
-        $this->tareaModel->editar($id, $data);
+
+        // Ajustar campos vacíos
+        $data['asignado_a']   = empty($data['asignado_a']) ? null : $data['asignado_a'];
+        $data['fecha_inicio'] = empty($data['fecha_inicio']) ? null : $data['fecha_inicio'];
+        $data['fecha_fin']    = empty($data['fecha_fin']) ? null : $data['fecha_fin'];
+        $data['descripcion']  = $data['descripcion'] ?? null;
+        $data['estado']       = $data['estado'] ?? 'pendiente';
+        $data['prioridad']    = $data['prioridad'] ?? 'media';
+
+        // Intentar actualizar la tarea
+        try {
+            $this->tareaModel->editar($id, $data);
+            $_SESSION['success'] = "Tarea actualizada correctamente.";
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error al actualizar la tarea: " . $e->getMessage();
+            echo "<pre>" . $e->getMessage() . "</pre>";
+            exit();
+        }
+
         header("Location: ../views/tareas/tablero.php?proyecto_id=" . $data['proyecto_id']);
         exit();
     }

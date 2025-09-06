@@ -20,7 +20,16 @@ class Tarea {
         );
         
     }
-
+    public function obtenerPorId($id) {
+        return $this->db->fetchAll(
+            "SELECT t.*, CONCAT(u.nombres, ' ', u.apellidos) AS asignado_nombre
+            FROM tareas t
+            LEFT JOIN usuarios u ON t.asignado_a = u.id
+            WHERE t.id = ?
+            LIMIT 1",
+            [$id]
+        )[0] ?? null;
+    }   
     // Crear tarea (incluye proyecto_id y lista_id)
     public function crear($data) {
         $sql = "INSERT INTO tareas 
