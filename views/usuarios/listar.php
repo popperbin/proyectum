@@ -1,5 +1,4 @@
 <?php
-session_start();
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
     header("Location: ../../index.php");
     exit();
@@ -10,10 +9,8 @@ $controller = new UsuarioController();
 $usuarios = $controller->listar();
 ?>
 
-<?php include __DIR__ . "/../layout/header.php"; ?>
-
 <h2>Gestión de Usuarios</h2>
-<a href="crear.php">Crear Usuario</a>
+<a href="views/usuarios/crear.php">Crear Usuario</a>
 <table border="1" cellpadding="8">
     <tr>
         <th>ID</th>
@@ -37,6 +34,5 @@ $usuarios = $controller->listar();
             </td>
         </tr>
     <?php endforeach; ?>
-    <?php include __DIR__ . "/../layout/footer.php"; ?>
 
 </table>

@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+};
 require_once __DIR__ . "/../models/Usuario.php";
 
 if (!class_exists('Usuario')) {
@@ -39,18 +42,18 @@ class UsuarioController {
         $usuario = $this->usuarioModel->login($email, $password);
         if ($usuario) {
             $_SESSION['usuario'] = $usuario;
-            header("Location: /proyectum/index.php?page=dashboard");
+            header("Location: /proyectum/router.php?page=dashboard");
             exit();
         } else {
             $_SESSION['error'] = "Credenciales inválidas";
-            header("Location: ../index.php");
+            header("Location: ../views/usuarios/login.php");
             exit();
         }
     }
 
     public function logout() {
         session_destroy();
-        header("Location: ../index.php");
+        header("Location: ../views/usuarios/login.php");
         exit();
     }
 }

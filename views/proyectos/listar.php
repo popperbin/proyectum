@@ -9,13 +9,11 @@ $usuario = $_SESSION['usuario'];
 $titulo = "Listado de Proyectos"; // <- opcional, para usar en header
 ?>
 
-<?php include("../layout/header.php"); ?>
 
 <h2>Proyectos</h2>
-<a href="../../dashboard.php" class="btn btn-secondary mb-3">⬅ Volver</a>
 
 <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-    <a href="crear.php" class="btn btn-primary mb-3">+ Crear Proyecto</a>
+    <a href="router.php?page=tareas/crear.php" class="btn btn-primary mb-3">+ Crear Proyecto</a>
 <?php endif; ?>
 
 <table class="table table-striped">
@@ -29,31 +27,43 @@ $titulo = "Listado de Proyectos"; // <- opcional, para usar en header
             <th>Acciones</th>
         </tr>
     </thead>
-    <tbody>
-        <?php foreach ($proyectos as $p): ?>
-            <tr>
-                <td><?= $p['id'] ?></td>
-                <td><a href="detalle.php?id=<?= $p['id'] ?>"><?= $p['nombre'] ?></a></td>
-                <td><?= $p['gestor'] ?? '-' ?></td>
-                <td><?= $p['cliente'] ?? '-' ?></td>
-                <td><?= $p['estado'] ?></td>
-                <td>
-                    <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-info">Tareas 📋</a>
-                        <a href="editar.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-warning">Editar ✏️</a>
-                        <a href="../../controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>" class="btn btn-sm btn-danger">Eliminar 🗑️</a>
-                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-success">Informes 📑</a>
+   <tbody>
+    <?php foreach ($proyectos as $p): ?>
+        <tr>
+            <td><?= $p['id'] ?></td>
+            <td>
+                <a href="router.php?page=proyectos/detalle&id=<?= $p['id'] ?>">
+                    <?= $p['nombre'] ?>
+                </a>
+            </td>
+            <td><?= $p['gestor'] ?? '-' ?></td>
+            <td><?= $p['cliente'] ?? '-' ?></td>
+            <td><?= $p['estado'] ?></td>
+            <td>
+                <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
+                    <!-- ✅ CORRECTO: Usar router para tareas -->
+                    <a href="router.php?page=tareas/tablero&proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-info">Tareas 📋</a>
                     
-                    <?php elseif ($usuario['rol'] === "colaborador"): ?>
-                        <a href="../tareas/tablero.php?proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-info">Mis Tareas 📌</a>
+                    <!-- ✅ CORRECTO: Usar router para editar -->
+                    <a href="router.php?page=proyectos/editar&id=<?= $p['id'] ?>" class="btn btn-sm btn-warning">Editar ✏️</a>
                     
-                    <?php elseif ($usuario['rol'] === "cliente"): ?>
-                        <a href="../informes/listar.php?proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-success">Informes 📑</a>
-                    <?php endif; ?>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
+                    <!-- ✅ CORRECTO: Controller para eliminar (POST action) -->
+                    <a href="controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>" 
+                       class="btn btn-sm btn-danger" 
+                       onclick="return confirm('¿Seguro que deseas eliminar este proyecto?')">Eliminar 🗑️</a>
+                    
+                    <!-- ✅ CORRECTO: Usar router para informes -->
+                    <a href="router.php?page=informes/generar&proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-success">Informes 📑</a>
+                
+                <?php elseif ($usuario['rol'] === "colaborador"): ?>
+                    <a href="router.php?page=tareas/tablero&proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-info">Mis Tareas 📌</a>
+                
+                <?php elseif ($usuario['rol'] === "cliente"): ?>
+                    <a href="router.php?page=informes/generar&proyecto_id=<?= $p['id'] ?>" class="btn btn-sm btn-success">Informes 📑</a>
+                <?php endif; ?>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
 </table>
 
-<?php include("../layout/footer.php"); ?>
