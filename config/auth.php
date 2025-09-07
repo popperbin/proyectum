@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 function requireLogin() {
     if (!isset($_SESSION['usuario'])) {

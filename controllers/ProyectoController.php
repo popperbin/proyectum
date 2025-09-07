@@ -79,30 +79,30 @@ class ProyectoController {
             }
         }
 
-        header("Location: ../views/proyectos/listar.php");
+        header("Location: /proyectum/router.php?page=proyectos/listar");
     }
 
 
     public function editar($id, $data) {
         requireRole(["gestor"]);
         $this->proyectoModel->actualizar($id, $data);
-        header("Location: ../views/proyectos/listar.php");
+        header("Location: /proyectum/router.php?page=proyectos/listar");
     }
 
     public function eliminar($id) {
         requireRole(["gestor"]);
         $this->proyectoModel->eliminar($id);
-        header("Location: ../views/proyectos/listar.php");
+        header("Location: /proyectum/router.php?page=proyectos/listar");
     }
     public function inactivar($id) {
         requireRole(["gestor"]);
         $this->proyectoModel->cambiarEstado($id, "inactivo");
-        header("Location: ../views/proyectos/listar.php");
+        header("Location: /proyectum/router.php?page=proyectos/listar");
     }
 
     public function activar($id) {
         requireRole(["gestor"]);
         $this->proyectoModel->cambiarEstado($id, "activo");
-        header("Location: ../views/proyectos/listar.php");
+        header("Location: /proyectum/router.php?page=proyectos/listar");
     }
 }

@@ -1,54 +1,60 @@
 <?php
-session_start();
-
-// Si no está logueado
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['usuario'])) {
-    header("Location: index.php");
+    header("Location: /views/usuarios/login.php");
     exit();
 }
-
 $usuario = $_SESSION['usuario'];
-$rol = $usuario['rol'];
+$rol = strtolower(trim($usuario['rol']));
+
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard - Proyectum</title>
-</head>
-<body>
-    <header>
-        <h1>Bienvenido, <?php echo $usuario['nombres']; ?> 👋</h1>
-        <p>Rol: <strong><?php echo ucfirst($rol); ?></strong></p>
-        <a href="controllers/UsuarioController.php?accion=logout">Cerrar sesión</a>
-    </header>
+<div class="d-flex">
+    <!-- Contenido principal -->
+    <main class="flex-grow-1 p-4" style="background-color: #78c2ffff;">
+        <h1 class="mb-3">Bienvenido, <?php echo $usuario['nombres']; ?> 👋</h1>
+        <h4 class="mb-4">Panel principal</h4>
+        <p>Aquí verás accesos y resúmenes según tu rol <b>(<?= ucfirst($rol) ?>)</b>.</p>
 
-    <nav>
-        <ul>
-            <?php if ($rol === "administrador"): ?>
-                <li><a href="views/usuarios/listar.php">👤 Gestión de Usuarios</a></li>
+        <!-- Tarjetas resumen -->
+        <div class="row">
+            <?php if ($rol === "gestor" || $rol === "administrador"): ?>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">📁 Proyectos activos</h5>
+                            <p class="card-text">Gestiona y supervisa tus proyectos en curso.</p>
+                            <a href="router.php?page=proyectos/listar" class="btn btn-primary btn-sm">Ver proyectos</a>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
 
             <?php if ($rol === "gestor"): ?>
-                <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
-                <li><a href="views/riesgos/listar.php">⚠️ Riesgos</a></li>
-                <li><a href="views/informes/listar.php">📊 Informes</a></li>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">⚠️ Riesgos</h5>
+                            <p class="card-text">Identifica y gestiona riesgos de proyectos.</p>
+                            <a href="router.php?page=riesgos/listar" class="btn btn-warning btn-sm">Ver riesgos</a>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
 
-            <?php if ($rol === "colaborador"): ?>
-                <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
+            <?php if ($rol === "administrador"): ?>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">👤 Usuarios</h5>
+                            <p class="card-text">Administra cuentas y roles de usuario.</p>
+                            <a href="router.php?page=usuarios/listar" class="btn btn-dark btn-sm">Ver usuarios</a>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
-
-            <?php if ($rol === "cliente"): ?>
-                <li><a href="views/proyectos/listar.php">📁 Proyectos</a></li>
-            <?php endif; ?>
-        </ul>
-    </nav>
-
-    <main>
-        <h2>Panel principal</h2>
-        <p>Aquí verás accesos y resúmenes según tu rol.</p>
+        </div>
     </main>
-</body>
-</html>
+</div>

@@ -6,7 +6,7 @@
 
 class Database {
     private $host = 'localhost';
-    private $port = '3306';
+    private $port = '3307';
     private $dbname = 'proyectum';  // 👈 nombre de la BD que importaste en PhpMyAdmin
     private $username = 'root';     // 👈 en XAMPP es root por defecto
     private $password = '';         // 👈 en XAMPP root no tiene contraseña por defecto

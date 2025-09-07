@@ -95,4 +95,22 @@ class Usuario {
         $sql = "DELETE FROM usuarios WHERE id = ?";
         return $this->db->execute($sql, [$id]);
     }
+
+    /**
+     * Verificar si existe un email
+     */
+    public function existeEmail($email) {
+        $sql = "SELECT COUNT(*) as total FROM usuarios WHERE email = ?";
+        $resultado = $this->db->fetchOne($sql, [$email]);
+        return $resultado['total'] > 0;
+    }
+
+    /**
+     * Verificar si existe una cédula
+     */
+    public function existeCedula($cedula) {
+        $sql = "SELECT COUNT(*) as total FROM usuarios WHERE cedula = ?";
+        $resultado = $this->db->fetchOne($sql, [$cedula]);
+        return $resultado['total'] > 0;
+    }
 }
