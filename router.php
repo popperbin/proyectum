@@ -44,6 +44,7 @@ $allowedRoutes = [
     
     // Informes
     'informes/generar',
+    'informes/listar',
     
     // Riesgos
     'riesgos/listar',

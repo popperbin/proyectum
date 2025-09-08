@@ -105,4 +105,13 @@ class ProyectoController {
         $this->proyectoModel->cambiarEstado($id, "activo");
         header("Location: /proyectum/router.php?page=proyectos/listar");
     }
+
+    public function obtenerPorId($id) {
+        return $this->proyectoModel->obtenerPorId($id);
+    }
+
+    public function listarPorUsuario($usuario_id) {
+        return $this->proyectoModel->listarPorUsuario($usuario_id);
+    }
+
 }

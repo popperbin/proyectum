@@ -44,7 +44,7 @@ $rol = strtolower(trim($usuario['rol']));
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="router.php?page=informes/generar" class="nav-link text-white">
+                <a href="router.php?page=informes/listar" class="nav-link text-white">
                     📊 Informes
                 </a>
             </li>
@@ -62,7 +62,7 @@ $rol = strtolower(trim($usuario['rol']));
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="router.php?page=informes/generar" class="nav-link text-white">
+                <a href="router.php?page=informes/listar" class="nav-link text-white">
                     📊 Informes
                 </a>
             </li>
