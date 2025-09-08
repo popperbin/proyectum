@@ -476,11 +476,14 @@ function drop(ev) {
 
 // Actualizar tarea en servidor
 function actualizarTareaLista(tareaId, nuevaListaId) {
-    const url = BASE_URL + 'controllers/TareaController.php?accion=mover';
+    const url = BASE_URL + "router.php?page=tareas&accion=mover";
     
     console.log('Enviando a:', url);
     console.log('Datos:', { tarea_id: tareaId, lista_id: nuevaListaId });
     
+    console.log('--- actualizarTareaLista() llamado ---');
+console.trace();
+
     fetch(url, {
         method: 'POST',
         headers: {
@@ -500,6 +503,11 @@ function actualizarTareaLista(tareaId, nuevaListaId) {
             console.log('Respuesta raw completa:', text);
             console.log('Longitud respuesta:', text.length);
             
+            console.log('=== DEBUG JSON PARSE ===');
+console.log('Raw recibido:', text);
+console.log('Trimmed:', text.trim());
+console.log('Length:', text.length);
+
             // Intentar limpiar el texto antes de parsearlo
             let cleanText = text.trim();
             

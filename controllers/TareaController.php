@@ -91,6 +91,9 @@ class TareaController {
 
     // Mover tarea (drag & drop)
     public function mover() {
+
+        error_log("DEBUG mover(): inicio de ejecución");
+
         // Limpiar cualquier output previo
         if (ob_get_level()) {
             ob_clean();
