@@ -9,16 +9,13 @@ class Informe {
     }
 
     public function listarPorProyecto($proyecto_id) {
-            $sql = "SELECT i.*, u.nombres as autor_nombre, u.apellidos as autor_apellido
+        $sql = "SELECT i.*, u.nombres as autor_nombre, u.apellidos as autor_apellido
                 FROM informes i
                 INNER JOIN usuarios u ON i.generado_por = u.id
                 WHERE i.proyecto_id = ?
                 ORDER BY i.fecha_generacion DESC";
 
-           $result = $this->db->fetchAll($sql, array($proyecto_id));
-
-    return $result;
-        
+        return $this->db->fetchAll($sql, [$proyecto_id]);
     }
 
     public function obtenerPorId($id) {
@@ -27,7 +24,7 @@ class Informe {
 
     public function crear($data) {
         $sql = "INSERT INTO informes 
-                (proyecto_id, titulo, contenido, tipo, archivo_pdf, generado_por,comentarios,observaciones)
+                (proyecto_id, titulo, contenido, tipo, archivo_pdf, generado_por, comentarios, observaciones)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         return $this->db->insert($sql, [
             $data['proyecto_id'],
@@ -50,6 +47,12 @@ class Informe {
             $data['archivo_pdf'] ?? null,
             $id
         ]);
+    }
+
+    // ✅ Nuevo: actualizar solo la URL del PDF
+    public function actualizarPdf($id, $pdfUrl) {
+        $sql = "UPDATE informes SET archivo_pdf=? WHERE id=?";
+        return $this->db->execute($sql, [$pdfUrl, $id]);
     }
 
     public function eliminar($id) {

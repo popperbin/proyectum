@@ -41,7 +41,7 @@ if ($proyecto_id) {
         </div>
         <div>
             <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
-                <a href="router.php?page=informes/generar" class="btn btn-success me-2">
+                <a href="router.php?page=informes/generar&id=<?= $proyecto_id ?>" target="_blank" class="btn btn-primary">
                     📊 Generar Informe
                 </a>
             <?php endif; ?>
@@ -170,15 +170,11 @@ if ($proyecto_id) {
                                         <?= date('d/m/Y H:i', strtotime($informe['fecha_generacion'])) ?>
                                     </td>
                                     <td>
-                                        <?php if (!empty($informe['archivo_pdf'])): ?>
-                                            <a href="controllers/InformeController.php?accion=descargar&id=<?= $informe['id'] ?>" 
-                                               target="_blank" 
-                                               class="btn btn-sm btn-outline-danger">
-                                                📄 PDF
-                                            </a>
-                                        <?php else: ?>
-                                            <span class="text-muted">Sin archivo</span>
-                                        <?php endif; ?>
+                                        <a href="router.php?page=informes/acciones&accion=descargar&id=<?= $informe['id'] ?>" 
+                                            target="_blank" 
+                                            class="btn btn-sm btn-outline-danger">
+                                            📄 PDF
+                                        </a>
                                     </td>
                                     <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
                                         <td>
@@ -189,7 +185,7 @@ if ($proyecto_id) {
                                                         data-bs-target="#modalDetalle<?= $informe['id'] ?>">
                                                     👁️ Ver
                                                 </button>
-                                                <a href="controllers/InformeController.php?accion=eliminar&id=<?= $informe['id'] ?>&proyecto_id=<?= $proyecto_id ?>" 
+                                                <a href="router.php?page=informes/acciones&accion=eliminar&id=<?= $informe['id'] ?>&proyecto_id=<?= $proyecto_id ?>" 
                                                    class="btn btn-sm btn-outline-danger"
                                                    onclick="return confirm('¿Estás seguro de eliminar este informe?')">
                                                     🗑️ Eliminar

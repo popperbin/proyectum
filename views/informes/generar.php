@@ -1,4 +1,12 @@
 <?php 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['accion'] ?? '') === 'crear') {
+    require_once __DIR__ . "/../../controllers/InformeController.php";
+    $controller = new InformeController();
+    $controller->crear($_POST);
+    exit;
+}
+
+
 require_once __DIR__ . "/../../config/auth.php"; 
 requireRole(["administrador", "gestor"]);
 
@@ -9,7 +17,7 @@ $proyectoController = new ProyectoController();
 $usuario = $_SESSION['usuario'];
 
 // Obtener proyecto específico si se pasa por parámetro
-$proyecto_id = $_GET['proyecto_id'] ?? null;
+$proyecto_id = $_GET['proyecto_id'] ?? $_GET['id'] ?? null;
 $proyecto_seleccionado = null;
 
 if ($proyecto_id) {
@@ -28,10 +36,11 @@ $proyectos = $proyectoController->listar();
             <p class="text-muted">Genera un informe detallado del proyecto</p>
         </div>
         <div>
-            <a href="router.php?page=informes/listar<?= $proyecto_id ? '&proyecto_id=' . $proyecto_id : '' ?>" 
-               class="btn btn-outline-secondary me-2">
+            <a href="router.php?page=informes/listar&proyecto_id=<?= $proyecto_id ?>" 
+            class="btn btn-outline-secondary me-2">
                 ⬅️ Volver a Informes
             </a>
+
             <a href="router.php?page=proyectos/listar" class="btn btn-outline-primary">
                 📋 Ver Proyectos
             </a>
@@ -80,7 +89,7 @@ $proyectos = $proyectoController->listar();
             <h5 class="mb-0">📄 Información del Informe</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="controllers/InformeController.php?accion=crear" id="formInforme">
+            <form method="POST" action="router.php?page=informes/acciones&accion=crear" id="formInforme">
                 <div class="row">
                     <!-- Información básica del informe -->
                     <div class="col-md-6">
