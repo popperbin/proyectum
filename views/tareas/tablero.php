@@ -55,8 +55,13 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
                 <div class="kanban-header">
                     <h5 class="fw-bold mb-0"><?= htmlspecialchars($lista['nombre']) ?></h5>
                     <span class="badge bg-secondary"><?= count($tareaModel->listarPorLista($lista['id'])) ?></span>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="eliminarLista(<?= $lista['id'] ?>, '<?= htmlspecialchars($lista['nombre']) ?>')">
+                                🗑️
+                            </button>
                 </div>
 
+                
                 <!-- Área de tareas con drop zone -->
                 <div class="kanban-tasks" 
                      ondrop="drop(event)" 
@@ -174,7 +179,7 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
                     <div id="form-tarea-<?= $lista['id'] ?>" class="form-nueva-tarea" style="display:none;">
                         <div class="card mt-2">
                             <div class="card-body">
-                                <form method="POST" action="controllers/TareaController.php?accion=crear">
+                                <form method="POST" action="router.php?page=tareas&accion=crear">
                                     <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
                                     <input type="hidden" name="lista_id" value="<?= $lista['id'] ?>">
 
@@ -478,6 +483,15 @@ function actualizarTareaLista(tareaId, nuevaListaId) {
         console.error('Error:', error);
         location.reload();
     });
+}
+
+function eliminarLista(listaId, nombreLista) {
+    if (confirm(`¿Eliminar la lista "${nombreLista}" y todas sus tareas?`)) {
+        window.location.href = "router.php?page=listas&accion=archivar&id=" 
+                            + listaId 
+                            + "&proyecto_id=<?= $proyecto_id ?>";
+
+    }
 }
 
 // Limpiar estados de drag cuando termine

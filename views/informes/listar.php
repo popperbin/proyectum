@@ -1,204 +1,323 @@
-<?php
-require_once __DIR__ . "/../../controllers/ProyectoController.php";
-require_once __DIR__ . "/../../config/auth.php";
-
+<?php 
+require_once __DIR__ . "/../../config/auth.php"; 
 requireLogin();
-$controller = new ProyectoController();
-$proyectos = $controller->listar();
+
+// Cargar controladores necesarios
+require_once __DIR__ . "/../../controllers/ProyectoController.php";
+require_once __DIR__ . "/../../models/Informe.php";
+
+$proyectoController = new ProyectoController();
+$informeModel = new Informe();
+
+// Obtener usuario actual
 $usuario = $_SESSION['usuario'];
+$rol = $usuario['rol'];
+
+// Filtrar proyectos según el rol
+if ($rol === 'administrador' || $rol === 'gestor') {
+    $proyectos = $proyectoController->listar();
+} else {
+    // Para clientes y colaboradores, solo sus proyectos
+    $proyectos = $proyectoController->listarPorUsuario($usuario['id']);
+}
+
+// Si se especifica un proyecto, obtener sus informes
+$proyecto_id = $_GET['proyecto_id'] ?? null;
+$informes = [];
+$proyecto_seleccionado = null;
+
+if ($proyecto_id) {
+    $informes = $informeModel->listarPorProyecto($proyecto_id);
+    $proyecto_seleccionado = $proyectoController->obtenerPorId($proyecto_id);
+}
 ?>
 
 <div class="container-fluid">
     <!-- Header de la página -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1">📋 Gestión de Proyectos</h2>
-            <p class="text-muted">Administra y supervisa todos los proyectos del sistema</p>
+            <h2 class="mb-1">📄 Gestión de Informes</h2>
+            <p class="text-muted">Visualiza y gestiona los informes del sistema</p>
         </div>
-        <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-            <a href="router.php?page=proyectos/crear" class="btn btn-success">
-                ➕ Nuevo Proyecto
+        <div>
+            <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+                <a href="router.php?page=informes/generar" class="btn btn-success me-2">
+                    📊 Generar Informe
+                </a>
+            <?php endif; ?>
+            <a href="router.php?page=dashboard" class="btn btn-outline-secondary">
+                🏠 Volver al Dashboard
             </a>
-        <?php endif; ?>
+        </div>
     </div>
 
-    <!-- Tabla de proyectos con diseño Bootstrap -->
+    <!-- Filtro por proyecto -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">🔍 Filtrar por Proyecto</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="router.php" class="row align-items-end">
+                <input type="hidden" name="page" value="informes/listar">
+                <div class="col-md-8">
+                    <label for="proyecto_id" class="form-label">Seleccionar Proyecto</label>
+                    <select class="form-select" id="proyecto_id" name="proyecto_id">
+                        <option value="">-- Todos los proyectos --</option>
+                        <?php foreach ($proyectos as $proyecto): ?>
+                            <option value="<?= $proyecto['id'] ?>" 
+                                    <?= ($proyecto_id == $proyecto['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($proyecto['nombre']) ?>
+                                (<?= ucfirst($proyecto['estado']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        🔍 Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($proyecto_seleccionado): ?>
+        <!-- Información del proyecto seleccionado -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    📋 Proyecto: <?= htmlspecialchars($proyecto_seleccionado['nombre']) ?>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="mb-1">
+                            <strong>Descripción:</strong> 
+                            <?= htmlspecialchars($proyecto_seleccionado['descripcion'] ?? 'Sin descripción') ?>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-<?= 
+                            $proyecto_seleccionado['estado'] === 'completado' ? 'success' : 
+                            ($proyecto_seleccionado['estado'] === 'activo' ? 'primary' : 'warning') 
+                        ?> fs-6">
+                            <?= ucfirst($proyecto_seleccionado['estado']) ?>
+                        </span>
+                        <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+                            <a href="router.php?page=informes/generar&id=<?= $proyecto_id ?>" 
+                               class="btn btn-sm btn-success ms-2">
+                                ➕ Crear Informe
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Lista de informes -->
     <div class="card shadow-sm">
         <div class="card-header">
-            <h5 class="mb-0">Lista de Proyectos (<?= count($proyectos) ?>)</h5>
+            <h5 class="mb-0">
+                📋 Informes Disponibles 
+                <?php if ($proyecto_seleccionado): ?>
+                    <span class="badge bg-secondary"><?= count($informes) ?></span>
+                <?php endif; ?>
+            </h5>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Gestor</th>
-                            <th>Cliente</th>
-                            <th>Estado</th>
-                            <th>Fecha Inicio</th>
-                            <th width="280">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($proyectos)): ?>
+        <div class="card-body">
+            <?php if (!empty($informes)): ?>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    🔭 No hay proyectos registrados
-                                </td>
+                                <th>📄 Título</th>
+                                <th>📊 Tipo</th>
+                                <th>👤 Generado por</th>
+                                <th>📅 Fecha</th>
+                                <th>📁 Archivo</th>
+                                <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+                                    <th>⚙️ Acciones</th>
+                                <?php endif; ?>
                             </tr>
-                        <?php else: ?>
-                            <?php foreach ($proyectos as $p): ?>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($informes as $informe): ?>
                                 <tr>
-                                    <td><span class="badge bg-secondary"><?= $p['id'] ?></span></td>
                                     <td>
-                                        <a href="router.php?page=proyectos/detalle&id=<?= $p['id'] ?>" 
-                                           class="text-decoration-none fw-bold">
-                                            <?= htmlspecialchars($p['nombre']) ?>
-                                        </a>
+                                        <strong><?= htmlspecialchars($informe['titulo']) ?></strong>
+                                        <?php if (!empty($informe['contenido'])): ?>
+                                            <br>
+                                            <small class="text-muted">
+                                                <?= substr(htmlspecialchars($informe['contenido']), 0, 100) ?>...
+                                            </small>
+                                        <?php endif; ?>
                                     </td>
-                                    <td><?= htmlspecialchars($p['gestor'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($p['cliente'] ?? '-') ?></td>
                                     <td>
-                                        <?php
-                                        $estadoClass = match($p['estado']) {
-                                            'activo' => 'bg-success',
-                                            'planificacion' => 'bg-warning text-dark',
-                                            'en_pausa' => 'bg-secondary',
-                                            'completado' => 'bg-primary',
-                                            'inactivo' => 'bg-danger',
-                                            default => 'bg-light text-dark'
-                                        };
-                                        $estadoIcon = match($p['estado']) {
-                                            'activo' => '🟢',
-                                            'planificacion' => '🟡',
-                                            'en_pausa' => '⏸️',
-                                            'completado' => '✅',
-                                            'inactivo' => '🔴',
-                                            default => '⚪'
-                                        };
-                                        ?>
-                                        <span class="badge <?= $estadoClass ?>">
-                                            <?= $estadoIcon ?> <?= ucfirst($p['estado']) ?>
+                                        <span class="badge bg-<?= 
+                                            $informe['tipo'] === 'final' ? 'success' : 
+                                            ($informe['tipo'] === 'progreso' ? 'primary' : 
+                                            ($informe['tipo'] === 'riesgos' ? 'warning' : 'secondary')) 
+                                        ?>">
+                                            <?= ucfirst($informe['tipo']) ?>
                                         </span>
                                     </td>
-                                    <td class="text-muted small">
-                                        <?= isset($p['fecha_inicio']) ? date('d/m/Y', strtotime($p['fecha_inicio'])) : '-' ?>
+                                    <td>
+                                        <?= htmlspecialchars(($informe['autor_nombre'] ?? '') . ' ' . ($informe['autor_apellido'] ?? '')) ?>
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <!-- Acciones según rol -->
-                                            <?php if (in_array($usuario['rol'], ["administrador", "gestor"])): ?>
-                                                <!-- Tareas -->
-                                                <a href="router.php?page=tareas/tablero&proyecto_id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-info" 
-                                                   title="Gestionar tareas">
-                                                    📋
+                                        <?= date('d/m/Y H:i', strtotime($informe['fecha_generacion'])) ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($informe['archivo_pdf'])): ?>
+                                            <a href="controllers/InformeController.php?accion=descargar&id=<?= $informe['id'] ?>" 
+                                               target="_blank" 
+                                               class="btn btn-sm btn-outline-danger">
+                                                📄 PDF
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted">Sin archivo</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalDetalle<?= $informe['id'] ?>">
+                                                    👁️ Ver
+                                                </button>
+                                                <a href="controllers/InformeController.php?accion=eliminar&id=<?= $informe['id'] ?>&proyecto_id=<?= $proyecto_id ?>" 
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('¿Estás seguro de eliminar este informe?')">
+                                                    🗑️ Eliminar
                                                 </a>
-                                                
-                                                <!-- Editar -->
-                                                <a href="router.php?page=proyectos/editar&id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-warning"
-                                                   title="Editar proyecto">
-                                                    ✏️
-                                                </a>
-                                                
-                                                <!-- Estado Toggle -->
-                                                <?php if ($p['estado'] === 'activo'): ?>
-                                                    <a href="controllers/ProyectoController.php?accion=inactivar&id=<?= $p['id'] ?>" 
-                                                       class="btn btn-sm btn-outline-secondary"
-                                                       title="Pausar proyecto"
-                                                       onclick="return confirm('¿Pausar este proyecto?')">
-                                                        ⏸️
-                                                    </a>
-                                                <?php else: ?>
-                                                    <a href="controllers/ProyectoController.php?accion=activar&id=<?= $p['id'] ?>" 
-                                                       class="btn btn-sm btn-outline-success"
-                                                       title="Activar proyecto"
-                                                       onclick="return confirm('¿Reactivar este proyecto?')">
-                                                        ▶️
+                                            </div>
+                                        </td>
+                                    <?php endif; ?>
+                                </tr>
+
+                                <!-- Modal de detalle del informe -->
+                                <div class="modal fade" id="modalDetalle<?= $informe['id'] ?>" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    📄 <?= htmlspecialchars($informe['titulo']) ?>
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Tipo:</strong> <?= ucfirst($informe['tipo']) ?>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Fecha:</strong> <?= date('d/m/Y H:i', strtotime($informe['fecha_generacion'])) ?>
+                                                    </div>
+                                                </div>
+                                                <?php if (!empty($informe['contenido'])): ?>
+                                                    <div class="mb-3">
+                                                        <strong>Contenido:</strong>
+                                                        <p class="mt-2"><?= nl2br(htmlspecialchars($informe['contenido'])) ?></p>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($informe['comentarios'])): ?>
+                                                    <div class="mb-3">
+                                                        <strong>Comentarios:</strong>
+                                                        <p class="mt-2"><?= nl2br(htmlspecialchars($informe['comentarios'])) ?></p>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($informe['observaciones'])): ?>
+                                                    <div class="mb-3">
+                                                        <strong>Observaciones:</strong>
+                                                        <p class="mt-2"><?= nl2br(htmlspecialchars($informe['observaciones'])) ?></p>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <?php if (!empty($informe['archivo_pdf'])): ?>
+                                                    <a href="controllers/InformeController.php?accion=descargar&id=<?= $informe['id'] ?>" 
+                                                       target="_blank" 
+                                                       class="btn btn-danger">
+                                                        📄 Descargar PDF
                                                     </a>
                                                 <?php endif; ?>
-                                                
-                                                <!-- Informes -->
-                                                <a href="router.php?page=informes/generar&proyecto_id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-success"
-                                                   title="Generar informes">
-                                                    📊
-                                                </a>
-                                                
-                                                <!-- Eliminar -->
-                                                <a href="controllers/ProyectoController.php?accion=eliminar&id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-danger"
-                                                   title="Eliminar proyecto"
-                                                   onclick="return confirm('⚠️ ¿Seguro que deseas eliminar <?= htmlspecialchars($p['nombre']) ?>?\n\nEsta acción no se puede deshacer.')">
-                                                    🗑️
-                                                </a>
-                                                
-                                            <?php elseif ($usuario['rol'] === "colaborador"): ?>
-                                                <a href="router.php?page=tareas/tablero&proyecto_id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-info">
-                                                    📌 Mis Tareas
-                                                </a>
-                                                
-                                            <?php elseif ($usuario['rol'] === "cliente"): ?>
-                                                <a href="router.php?page=informes/generar&proyecto_id=<?= $p['id'] ?>" 
-                                                   class="btn btn-sm btn-success">
-                                                    📊 Ver Informes
-                                                </a>
-                                            <?php endif; ?>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Cerrar
+                                                </button>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </div>
                             <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            <?php elseif ($proyecto_seleccionado): ?>
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-file-alt" style="font-size: 4rem; color: #dee2e6;"></i>
+                    </div>
+                    <h4 class="text-muted">No hay informes para este proyecto</h4>
+                    <p class="text-muted">
+                        Este proyecto aún no tiene informes generados.
+                    </p>
+                    <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+                        <a href="router.php?page=informes/generar&id=<?= $proyecto_id ?>" 
+                           class="btn btn-primary">
+                            📊 Crear Primer Informe
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-search" style="font-size: 4rem; color: #dee2e6;"></i>
+                    </div>
+                    <h4 class="text-muted">Selecciona un proyecto</h4>
+                    <p class="text-muted">
+                        Usa el filtro de arriba para seleccionar un proyecto y ver sus informes.
+                    </p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!-- Estadísticas rápidas -->
-    <div class="row mt-4">
-        <?php
-        $stats = array_count_values(array_column($proyectos, 'estado'));
-        $activos = $stats['activo'] ?? 0;
-        $completados = $stats['completado'] ?? 0;
-        $enPausa = $stats['en_pausa'] ?? 0;
-        $planificacion = $stats['planificacion'] ?? 0;
-        ?>
-        <div class="col-md-3">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <h5 class="text-success"><?= $activos ?></h5>
-                    <small class="text-muted">🟢 Activos</small>
+    <!-- Información adicional -->
+    <?php if ($rol === 'administrador' || $rol === 'gestor'): ?>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="card-title">💡 Gestión de Informes</h6>
+                        <ul class="mb-0">
+                            <li><strong>Tipos de informes:</strong> Progreso, Final, Riesgos y Personalizados</li>
+                            <li><strong>Generación automática:</strong> Los informes se generan en PDF automáticamente</li>
+                            <li><strong>Permisos:</strong> Solo gestores y administradores pueden crear/eliminar informes</li>
+                            <li><strong>Descarga:</strong> Todos los usuarios pueden descargar los PDFs de los informes</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center border-primary">
-                <div class="card-body">
-                    <h5 class="text-primary"><?= $completados ?></h5>
-                    <small class="text-muted">✅ Completados</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-secondary">
-                <div class="card-body">
-                    <h5 class="text-secondary"><?= $enPausa ?></h5>
-                    <small class="text-muted">⏸️ En Pausa</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <h5 class="text-warning"><?= $planificacion ?></h5>
-                    <small class="text-muted">🟡 Planificación</small>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php endif; ?>
 </div>
+
+<script>
+// Confirmación mejorada para eliminar informes
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteLinks = document.querySelectorAll('a[onclick*="eliminar"]');
+    deleteLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const confirmed = confirm('⚠️ ¿Estás seguro de eliminar este informe?\n\nEsta acción no se puede deshacer.');
+            if (confirmed) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>

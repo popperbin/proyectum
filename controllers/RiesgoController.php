@@ -27,7 +27,7 @@ switch ($accion) {
         $_POST['estado'] = $_POST['estado'] ?? 'pendiente';
 
         $risk->crear($_POST);
-       header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $_POST['proyecto_id']);
+       header("Location: /proyectum/router.php?page=riesgo/crear&proyecto_id=" . $_POST['proyecto_id']);
         exit();
     }
 
@@ -58,7 +58,7 @@ switch ($accion) {
             $_POST['responsable_id'] = $usuario['id'];
 
             $risk->actualizar($id, $_POST);
-            header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $_POST['proyecto_id']);
+            header("Location: /proyectum/router.php?page=riesgos/listar&id_proyecto=" . $_POST['proyecto_id']);
             exit();
         }
 
@@ -75,7 +75,7 @@ switch ($accion) {
         }
 
         $risk->eliminar($id);
-        header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $idProyecto);
+        header("Location: /proyectum/router.php?page=riesgos/listar&id_proyecto=" . $idProyecto);
         exit();
         break;
 

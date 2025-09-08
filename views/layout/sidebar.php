@@ -12,8 +12,10 @@ $rol = strtolower(trim($usuario['rol']));
     <!-- Header del sidebar -->
     <div class="text-center mb-3 border-bottom border-secondary pb-3">
         <small class="text-muted">Bienvenido</small>
-        <h6 class="mb-0 text-info"><?php echo $usuario['nombres']; ?></h6>
-        <small class="text-warning"><?= ucfirst($rol) ?></small>
+        <h6 class="mb-0 text-info"><?php
+        echo $usuario['nombres'];
+        ?>
+        </h6><small class="text-warning"><?=ucfirst($rol)?></small>
     </div>
 
     <!-- Menú principal -->
@@ -44,7 +46,7 @@ $rol = strtolower(trim($usuario['rol']));
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="router.php?page=informes/generar" class="nav-link text-white">
+                <a href="router.php?page=informes/listar" class="nav-link text-white">
                     📊 Informes
                 </a>
             </li>
@@ -62,7 +64,7 @@ $rol = strtolower(trim($usuario['rol']));
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="router.php?page=informes/generar" class="nav-link text-white">
+                <a href="router.php?page=informes/listar" class="nav-link text-white">
                     📊 Informes
                 </a>
             </li>

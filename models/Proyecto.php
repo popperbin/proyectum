@@ -109,4 +109,18 @@ class Proyecto {
         );
     }
 
+    public function listarPorUsuario($usuario_id) {
+        $sql = "
+            SELECT DISTINCT p.*
+            FROM proyectos p
+            LEFT JOIN proyecto_colaboradores pc 
+                ON p.id = pc.proyecto_id
+            WHERE p.cliente_id = ?
+            OR p.gestor_id = ?
+            OR pc.usuario_id = ?
+            ORDER BY p.fecha_creacion DESC
+        ";
+        return $this->db->fetchAll($sql, [$usuario_id, $usuario_id, $usuario_id]);
+    }
+
 }

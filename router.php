@@ -1,4 +1,20 @@
 <?php
+require_once __DIR__ . '/config/bootstrap.php';
+
+// --- Bloque de acciones de controlador antes de imprimir nada ---
+if (isset($_GET['accion'])) {
+    switch ($_GET['accion']) {
+        case 'tareas.crear':
+            require __DIR__ . '/controllers/TareaController.php';
+            exit; // importante
+        case 'listas.archivar':
+            require __DIR__ . '/controllers/ListaController.php';
+            exit;
+    }
+}
+// ----------------------------------------------------------------
+
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -14,11 +30,11 @@ if (!isset($_SESSION['usuario'])) {
 // Usuario en sesión
 $usuario = $_SESSION['usuario'];
 
-// Header global
-include __DIR__ . "/views/layout/header.php";
-
 // Página solicitada (?page=)
 $page = $_GET['page'] ?? "dashboard";
+
+        // Header global
+include __DIR__ . "/views/layout/header.php";
 
 // Rutas permitidas en el sistema
 $allowedRoutes = [
@@ -33,7 +49,7 @@ $allowedRoutes = [
     
     // Tareas
     'tareas/tablero',
-    'tareas/crear',
+    'tareas/listar',
     'tareas/editar',
     
     // Usuarios
@@ -44,10 +60,14 @@ $allowedRoutes = [
     
     // Informes
     'informes/generar',
+    'informes/listar',
     
     // Riesgos
     'riesgos/listar',
-    'riesgos/crear'
+    'riesgos/crear',
+
+    //Comentarios
+    'comentario/crear',
 ];
 
 // Verificar si la ruta está permitida
@@ -58,7 +78,7 @@ if (in_array($page, $allowedRoutes)) {
     } else {
         $viewPath = __DIR__ . "/views/{$page}.php";
     }
-    
+
     // Verificar que el archivo existe
     if (file_exists($viewPath)) {
         require $viewPath;
@@ -73,15 +93,60 @@ if (in_array($page, $allowedRoutes)) {
         echo '</div>';
     }
 } else {
-    // Ruta no permitida - mostrar error 403
-    echo '<div class="container mt-5">';
-    echo '<div class="alert alert-warning text-center">';
-    echo '<h4>🚫 Acceso no permitido</h4>';
-    echo '<p>No tienes permisos para acceder a <strong>' . htmlspecialchars($page) . '</strong>.</p>';
-    echo '<a href="router.php?page=dashboard" class="btn btn-primary">🏠 Volver al Dashboard</a>';
-    echo '</div>';
-    echo '</div>';
-}
 
+     // --- Controladores ---
+    switch ($page) {
+        case 'tareas':
+            require_once __DIR__ . "/controllers/TareaController.php";
+            $controller = new TareaController();
+
+            $accion = $_GET['accion'] ?? null;
+            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->crear($_POST);
+            } elseif ($accion === 'editar' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
+                $controller->editar($_GET['id'], $_POST);
+            } elseif ($accion === 'eliminar' && isset($_GET['id'], $_GET['proyecto_id'])) {
+                $controller->eliminar($_GET['id'], $_GET['proyecto_id']);
+            } elseif ($accion === 'mover' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->mover($_POST['id'], $_POST['lista_id']);
+            }
+            break;
+
+        case 'proyectos':
+            require_once __DIR__ . "/controllers/ProyectoController.php";
+            $controller = new ProyectoController();
+
+            $accion = $_GET['accion'] ?? null;
+            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->crear($_POST);
+            } elseif ($accion === 'editar' && isset($_GET['id'])) {
+                $controller->editar($_GET['id'], $_POST);
+            } elseif ($accion === 'eliminar' && isset($_GET['id'])) {
+                $controller->eliminar($_GET['id']);
+            }
+            break;
+
+        case 'listas':
+            require_once __DIR__ . "/controllers/ListaController.php";
+            $controller = new ListaController();
+
+            $accion = $_GET['accion'] ?? null;
+            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->crear($_POST);
+            } elseif ($accion === 'archivar' && isset($_GET['id'], $_GET['proyecto_id'])) {
+                $controller->archivar($_GET['id'], $_GET['proyecto_id']);
+            }
+            break;
+
+    // Ruta no permitida - mostrar error 403
+    default:
+
+            echo '<div class="container mt-5"><div class="alert alert-warning text-center">';
+            echo '<h4>🚫 Acceso no permitido</h4>';
+            echo '<p>No tienes permisos para acceder a <strong>' . htmlspecialchars($page) . '</strong>.</p>';
+            echo '<a href="router.php?page=dashboard" class="btn btn-primary">🏠 Volver al Dashboard</a>';
+            echo '</div></div>';
+    }
+}
 // Footer global
 include __DIR__ . "/views/layout/footer.php";

@@ -28,9 +28,11 @@ class Lista {
         return $this->db->insert($sql, [$nombre, $proyecto_id]);
     }
 
-    // Eliminar lista y sus tareas
-    public function eliminar($id) {
-        $sql = "DELETE FROM listas WHERE id = ?";
-        return $this->db->execute($sql, [$id]);
+    // archivar  lista y sus tareas
+    public function archivar($id, $proyecto_id) {
+        $sql = "UPDATE listas SET estado = 'archivado' WHERE id = ? AND proyecto_id = ?";
+        return $this->db->execute($sql, [$id, $proyecto_id]);
     }
+
+
 }

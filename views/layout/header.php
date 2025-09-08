@@ -97,7 +97,7 @@ $usuario = $_SESSION['usuario'] ?? null;
             </button>
             <div class="logo">
                 <h4 class="m-0">
-                    <img src="../assets/media/logo.jpg" alt="Logo" style="height: 30px;" class="me-2">
+                    <img src="../proyectum/assets/media/logo.jpg" alt="Logo" style="height: 30px;" class="me-2">
                     Proyectum
                 </h4>
             </div>
