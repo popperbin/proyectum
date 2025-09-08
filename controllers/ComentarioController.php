@@ -25,7 +25,7 @@ class ComentarioController {
         }
         $this->comentarioModel->crear($tarea_id, $usuario_id, $comentario);
         // Redirigir de regreso al tablero de la tarea
-        header("Location: ../views/tareas/editar.php?id=$tarea_id");
+        header("Location: /proyectum/router.php?page=tareas/editar&proyecto_id=$tarea_id");
         exit();
 
 

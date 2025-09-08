@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/bootstrap.php';
 require_once __DIR__ . "/../models/Tarea.php";
 require_once __DIR__ . "/../config/auth.php";
 
@@ -11,13 +12,14 @@ class TareaController {
 
     // Crear tarea
     public function crear($data) {
+
         // Verificar que el rol tenga permiso
-        requireRole(["gestor"]);
+        requireRole(['gestor', 'administrador']);
 
         // Validar campos obligatorios
         if (empty($data['nombre']) || empty($data['proyecto_id']) || empty($data['lista_id'])) {
             $_SESSION['error'] = "El nombre, proyecto y lista son obligatorios.";
-            header("Location: ../views/tareas/tablero.php?proyecto_id=" . ($data['proyecto_id'] ?? ''));
+            header("Location: ../router.php?page=tareas/tablero&proyecto_id=" . ($data['proyecto_id'] ?? ''));
             exit();
         }
 
@@ -45,7 +47,7 @@ class TareaController {
         }
 
         // Redirigir al tablero del proyecto
-        header("Location: ../views/tareas/tablero.php?proyecto_id=" . $data['proyecto_id']);
+        header("Location: ../router.php?page=tareas/tablero&proyecto_id=" . ($data['proyecto_id'] ?? ''));
         exit();
     }
 
@@ -71,7 +73,7 @@ class TareaController {
             exit();
         }
 
-        header("Location: ../views/tareas/tablero.php?proyecto_id=" . $data['proyecto_id']);
+        header("Location: ../router.php?page=tareas/tablero&proyecto_id=" . $data['proyecto_id']);
         exit();
     }
 
@@ -79,47 +81,19 @@ class TareaController {
     public function eliminar($id, $proyecto_id) {
         requireRole(["gestor"]);
         $this->tareaModel->eliminar($id);
-        header("Location: ../views/tareas/tablero.php?proyecto_id=$proyecto_id");
+        header("Location: ../router.php?page=tareas/tablero&proyecto_id=$proyecto_id");
         exit();
     }
 
     // Mover tarea (drag & drop)
-    public function mover($id, $lista_id) {
-        requireRole(["gestor"]);
-        $this->tareaModel->mover($id, $lista_id);
-        echo "ok";
-        exit();
+    public function mover() {
+        if ($_POST['tarea_id'] && $_POST['lista_id']) {
+            $resultado = $this->tareaModel->actualizarLista($_POST['tarea_id'], $_POST['lista_id']);
+            echo json_encode(['success' => $resultado]);
+            exit(); // IMPORTANTE: evitar redirección adicional
+        }
     }
-}
 
-// --- Router básico ---
-if (isset($_GET['accion'])) {
-    $controller = new TareaController();
-
-    switch ($_GET['accion']) {
-        case 'crear':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->crear($_POST);
-            }
-            break;
-
-        case 'editar':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
-                $controller->editar($_GET['id'], $_POST);
-            }
-            break;
-
-        case 'eliminar':
-            if (isset($_GET['id'], $_GET['proyecto_id'])) {
-                $controller->eliminar($_GET['id'], $_GET['proyecto_id']);
-            }
-            break;
-
-        case 'mover':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->mover($_POST['id'], $_POST['lista_id']);
-            }
-            break;
-    }
+    
 }
 

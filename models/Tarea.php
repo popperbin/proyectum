@@ -79,4 +79,15 @@ class Tarea {
         $sql = "DELETE FROM tareas WHERE id = ?";
         return $this->db->execute($sql, [$id]);
     }
+
+    public function actualizarLista($tarea_id, $nueva_lista_id) {
+        try {
+            $sql = "UPDATE tareas SET lista_id = ? WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([$nueva_lista_id, $tarea_id]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar lista: " . $e->getMessage());
+            return false;
+        }
+    }
 }
