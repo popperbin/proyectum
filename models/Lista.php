@@ -33,6 +33,17 @@ class Lista {
         $sql = "UPDATE listas SET estado = 'archivado' WHERE id = ? AND proyecto_id = ?";
         return $this->db->execute($sql, [$id, $proyecto_id]);
     }
+        // Eliminar lista (y opcionalmente sus tareas asociadas)
+    public function eliminar($id, $proyecto_id) {
+        // Primero eliminar tareas asociadas a la lista
+        $sqlT = "DELETE FROM tareas WHERE lista_id = ?";
+        $this->db->execute($sqlT, [$id]);
+
+        // Luego eliminar la lista
+        $sql = "DELETE FROM listas WHERE id = ? AND proyecto_id = ?";
+        return $this->db->execute($sql, [$id, $proyecto_id]);
+    }
+
 
 
 }

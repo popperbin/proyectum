@@ -74,7 +74,7 @@ $proyecto = $proyectoModel->obtenerPorId($proyecto_id);
                             <?php foreach ($tareas as $t): ?>
                                 <tr>
                                     <td>
-                                        <strong><?= htmlspecialchars($t['titulo']) ?></strong>
+                                        <strong><?= htmlspecialchars($t['nombre']) ?></strong>
                                         <?php if (!empty($t['descripcion'])): ?>
                                             <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 60)) ?>...</small>
                                         <?php endif; ?>

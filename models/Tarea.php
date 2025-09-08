@@ -90,4 +90,13 @@ class Tarea {
             return false;
         }
     }
+    public function listarPorProyecto($proyecto_id) {
+     $sql = "SELECT * 
+            FROM tareas 
+            WHERE proyecto_id = ? 
+              AND estado != 'archivado'
+            ORDER BY id ASC";
+        return $this->db->fetchAll($sql, [$proyecto_id]);
+    }
+
 }

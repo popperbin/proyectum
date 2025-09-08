@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/config/bootstrap.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 
 // --- Bloque de acciones de controlador antes de imprimir nada ---
 if (isset($_GET['accion'])) {
@@ -51,6 +55,7 @@ $allowedRoutes = [
     'tareas/tablero',
     'tareas/listar',
     'tareas/editar',
+    'tareas/acciones',  // Nueva vista para acciones de tareas (crear, editar, eliminar)
     
     // Usuarios
     'usuarios/listar',
@@ -72,89 +77,93 @@ $allowedRoutes = [
 ];
 $page = $_GET['page'] ?? "dashboard";
 $accion = $_GET['accion'] ?? null;
-if ($page === "informes/acciones" && $accion === "descargar" && isset($_GET['id'])) {
-    $controller = new InformeController();
-    $controller->descargar($_GET['id']);
-    exit;
-}
+// Lista de entidades que usan acciones separadas
+$entitiesWithActions = ['tareas', 'listas', 'proyectos', 'informes'];
 
-// Verificar si la ruta está permitida
-if (in_array($page, $allowedRoutes)) {
-    // Construir la ruta del archivo
-    if ($page === 'dashboard') {
-        $viewPath = __DIR__ . "/dashboard.php";
-    } else {
-        $viewPath = __DIR__ . "/views/{$page}.php";
-    }
+// 🔹 DETECCIÓN DE rutas tipo: tareas/acciones, listas/acciones, etc.
+$pageParts = explode('/', $page);
+if (count($pageParts) === 2 && $pageParts[1] === 'acciones' && in_array($pageParts[0], $entitiesWithActions)) {
+    $entity = $pageParts[0];
+    $accionesPath = __DIR__ . "/views/{$entity}/acciones.php";
 
-    // Verificar que el archivo existe
-    if (file_exists($viewPath)) {
-        require $viewPath;
+    if (file_exists($accionesPath)) {
+        require $accionesPath;
+        exit;
     } else {
-        // Si el archivo no existe, mostrar error 404
         echo '<div class="container mt-5">';
         echo '<div class="alert alert-danger text-center">';
-        echo '<h4>📁 Página no encontrada</h4>';
-        echo '<p>La vista <strong>' . htmlspecialchars($page) . '</strong> no existe.</p>';
+        echo '<h4>📁 Archivo de acciones no encontrado</h4>';
+        echo '<p>No existe el archivo <strong>' . htmlspecialchars($accionesPath) . '</strong>.</p>';
         echo '<a href="router.php?page=dashboard" class="btn btn-primary">🏠 Volver al Dashboard</a>';
-        echo '</div>';
-        echo '</div>';
+        echo '</div></div>';
+        exit;
     }
-} else {
+}
 
-     // --- Controladores ---
+// 🔹 VISTAS PERMITIDAS
+if (in_array($page, $allowedRoutes)) {
+    if ($page === 'dashboard') {
+        require __DIR__ . "/dashboard.php";
+    } else {
+        $viewPath = __DIR__ . "/views/{$page}.php";
+        if (file_exists($viewPath)) {
+            require $viewPath;
+        } else {
+            echo '<div class="container mt-5">';
+            echo '<div class="alert alert-danger text-center">';
+            echo '<h4>📁 Página no encontrada</h4>';
+            echo '<p>La vista <strong>' . htmlspecialchars($page) . '</strong> no existe.</p>';
+            echo '<a href="router.php?page=dashboard" class="btn btn-primary">🏠 Volver al Dashboard</a>';
+            echo '</div></div>';
+        }
+    }
+
+// 🔹 CONTROLADORES TRADICIONALES (si no usas acciones separadas)
+} else {
     switch ($page) {
         case 'tareas':
             require_once __DIR__ . "/controllers/TareaController.php";
             $controller = new TareaController();
-
-            $accion = $_GET['accion'] ?? null;
-            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion === 'crear') {
                 $controller->crear($_POST);
-            } elseif ($accion === 'editar' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
-                $controller->editar($_GET['id'], $_POST);
             } elseif ($accion === 'eliminar' && isset($_GET['id'], $_GET['proyecto_id'])) {
                 $controller->eliminar($_GET['id'], $_GET['proyecto_id']);
-            } elseif ($accion === 'mover' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-                $controller->mover($_POST['id'], $_POST['lista_id']);
+            }
+            elseif ($accion === 'eliminar_lista' && isset($_GET['id'], $_GET['proyecto_id'])) {
+                $controller->eliminarLista($_GET['id'], $_GET['proyecto_id']);
             }
             break;
 
         case 'proyectos':
             require_once __DIR__ . "/controllers/ProyectoController.php";
             $controller = new ProyectoController();
-
-            $accion = $_GET['accion'] ?? null;
-            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion === 'crear') {
                 $controller->crear($_POST);
-            } elseif ($accion === 'editar' && isset($_GET['id'])) {
-                $controller->editar($_GET['id'], $_POST);
-            } elseif ($accion === 'eliminar' && isset($_GET['id'])) {
-                $controller->eliminar($_GET['id']);
             }
             break;
 
         case 'listas':
-            require_once __DIR__ . "/controllers/ListaController.php";
-            $controller = new ListaController();
+            require_once __DIR__ .  "/controllers/ListaController.php";
 
-            $accion = $_GET['accion'] ?? null;
-            if ($accion === 'crear' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller = new ListaController();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion === 'crear') {
                 $controller->crear($_POST);
-            } elseif ($accion === 'archivar' && isset($_GET['id'], $_GET['proyecto_id'])) {
-                $controller->archivar($_GET['id'], $_GET['proyecto_id']);
             }
             break;
 
-    // Ruta no permitida - mostrar error 403
-    default:
+        // Puedes seguir agregando más controladores aquí...
 
-            echo '<div class="container mt-5"><div class="alert alert-warning text-center">';
+        default:
+            // 🔸 Ruta no reconocida
+            echo '<div class="container mt-5">';
+            echo '<div class="alert alert-warning text-center">';
             echo '<h4>🚫 Acceso no permitido</h4>';
             echo '<p>No tienes permisos para acceder a <strong>' . htmlspecialchars($page) . '</strong>.</p>';
             echo '<a href="router.php?page=dashboard" class="btn btn-primary">🏠 Volver al Dashboard</a>';
             echo '</div></div>';
+            break;
     }
 }
-// Footer global
-include __DIR__ . "/views/layout/footer.php";
+
+// 🔹 FOOTER GLOBAL
+require_once __DIR__ . "/views/layout/footer.php";

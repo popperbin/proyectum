@@ -149,17 +149,17 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
                                     <ul class="dropdown-menu">
                                         <li>
                                             <a class="dropdown-item" 
-                                               href="router.php?page=tareas/editar&id=<?= $tarea['id'] ?>&proyecto_id=<?= $proyecto_id ?>">
+                                               href="router.php?page=tareas/editar&id=<?= $tarea['id'] ?>&proyecto_id=<?= $proyecto_id ?>" class="dropdown-item">
                                                 ✏️ Editar
                                             </a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <a class="dropdown-item text-danger" 
-                                               href="controllers/TareaController.php?accion=eliminar&id=<?= $tarea['id'] ?>&proyecto_id=<?= $proyecto_id ?>"
-                                               onclick="return confirm('¿Eliminar esta tarea?')">
-                                                🗑️ Eliminar
-                                            </a>
+                                            <form method="POST" action="router.php?page=tareas/acciones&accion=eliminar" onsubmit="return confirm('¿Eliminar esta tarea?');" style="display:inline;">
+                                                <input type="hidden" name="id" value="<?= $tarea['id'] ?>">
+                                                <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
+                                                <button type="submit" class="dropdown-item text-danger">🗑️ Eliminar</button>
+                                            </form>
                                         </li>
                                     </ul>
                                 </div>
@@ -179,7 +179,7 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
                     <div id="form-tarea-<?= $lista['id'] ?>" class="form-nueva-tarea" style="display:none;">
                         <div class="card mt-2">
                             <div class="card-body">
-                                <form method="POST" action="router.php?page=tareas&accion=crear">
+                                <form action="router.php?page=tareas/acciones&accion=crear" method="POST">
                                     <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
                                     <input type="hidden" name="lista_id" value="<?= $lista['id'] ?>">
 
@@ -248,7 +248,7 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
         <div class="kanban-column kanban-add-column">
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center justify-content-center">
-                    <form method="POST" action="controllers/ListaController.php?accion=crear" class="w-100">
+                    <form method="POST" action="/proyectum/router.php?page=listas&accion=crear" class="w-100">
                         <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
                         <div class="input-group">
                             <input type="text" 
@@ -487,10 +487,9 @@ function actualizarTareaLista(tareaId, nuevaListaId) {
 
 function eliminarLista(listaId, nombreLista) {
     if (confirm(`¿Eliminar la lista "${nombreLista}" y todas sus tareas?`)) {
-        window.location.href = "router.php?page=listas&accion=archivar&id=" 
-                            + listaId 
-                            + "&proyecto_id=<?= $proyecto_id ?>";
-
+        window.location.href = "router.php?page=tareas&accion=eliminar_lista&id=" 
+                    + listaId 
+                    + "&proyecto_id=<?= $proyecto_id ?>";
     }
 }
 

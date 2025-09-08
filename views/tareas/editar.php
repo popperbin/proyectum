@@ -61,7 +61,8 @@ $comentarios = $comentarioModel->listarPorTarea($tarea['id']);
                     <h5 class="mb-0">📝 <?= htmlspecialchars($tarea['nombre']) ?></h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="controllers/TareaController.php?accion=editar&id=<?= $tarea['id'] ?>">
+                    <form method="POST" action="router.php?page=tareas/acciones&accion=editar">
+                        <input type="hidden" name="id" value="<?= $tarea['id'] ?>">
                         <input type="hidden" name="proyecto_id" value="<?= $tarea['proyecto_id'] ?>">
                         <input type="hidden" name="lista_id" value="<?= $tarea['lista_id'] ?>">
 
@@ -229,8 +230,9 @@ $comentarios = $comentarioModel->listarPorTarea($tarea['id']);
 
                 <!-- Formulario para nuevo comentario -->
                 <div class="card-footer">
-                    <form method="POST" action="controllers/ComentarioController.php?accion=crear" class="comentario-form">
+                    <form method="POST" action="router.php?page=tareas/acciones&accion=comentario" class="comentario-form">
                         <input type="hidden" name="tarea_id" value="<?= $tarea['id'] ?>">
+                        <input type="hidden" name="proyecto_id" value="<?= $tarea['proyecto_id'] ?>">
                         <div class="input-group">
                             <textarea class="form-control" 
                                       name="comentario" 

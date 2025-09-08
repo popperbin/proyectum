@@ -8,6 +8,7 @@ $accion = $_GET['accion'] ?? '';
 
 switch ($accion) {
 
+    // Listar riesgos
     case 'listar':
         requireRole(["gestor", "administrador"]);
         $idProyecto = $_GET['id_proyecto'] ?? null;
@@ -17,40 +18,27 @@ switch ($accion) {
         require __DIR__ . '/../views/riesgos/listar.php';
         break;
 
+    // Crear un nuevo riesgo
     case 'crear':
         requireRole(["gestor", "administrador"]);
         $idProyecto = $_GET['id_proyecto'] ?? null;
         if (!$idProyecto) die("Proyecto no especificado.");
 
+        // Obtener la lista de usuarios para asignar responsable
         $usuarioModel = new Usuario();
         $usuarios = $usuarioModel->listar();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST['estado'] = $_POST['estado'] ?? 'pendiente';
+            $_POST['estado'] = $_POST['estado'] ?? 'pendiente';  // Valor por defecto
             $risk->crear($_POST);
-            header("Location: RiesgoController.php?accion=listar&id_proyecto=" . $_POST['proyecto_id']);
+            header("Location: /proyectum/router.php?page=riesgos/listar&id_proyecto=" . $_POST['proyecto_id']);
             exit();
         }
 
         require __DIR__ . '/../views/riesgos/crear.php';
         break;
 
-        $risk->crear($_POST);
-       header("Location: /proyectum/router.php?page=riesgo/crear&proyecto_id=" . $_POST['proyecto_id']);
-        exit();
-    }
-
-    $idProyecto = $_GET['id_proyecto'] ?? null;
-    if (!$idProyecto) {
-        die("Proyecto no especificado.");
-    }
-
-    // Traer lista de usuarios para el select
-    $usuarioModel = new Usuario();
-    $usuarios = $usuarioModel->listar();
-
-    require __DIR__ . '/../views/riesgos/crear.php';
-    break;
+    // Editar un riesgo existente
     case 'editar':
         requireRole(["gestor", "administrador"]);
         $id = $_GET['id'] ?? null;
@@ -70,6 +58,7 @@ switch ($accion) {
         require __DIR__ . '/../views/riesgos/editar.php';
         break;
 
+    // Eliminar un riesgo
     case 'eliminar':
         requireRole(["gestor", "administrador"]);
         $id = $_GET['id'] ?? null;
@@ -81,6 +70,7 @@ switch ($accion) {
         exit();
         break;
 
+    // Acción no válida
     default:
         echo "Acción no válida.";
         break;

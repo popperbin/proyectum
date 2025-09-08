@@ -13,23 +13,22 @@ class ComentarioController {
         $this->comentarioModel = new Comentario();
     }
 
-    // Crear comentario
-    public function crear($tarea_id, $usuario_id, $comentario) {
+    public function crear($tarea_id, $usuario_id, $comentario, $proyecto_id) {
         if (!$usuario_id) {
             die("No hay usuario logueado.");
-            var_dump($_SESSION);
-            exit();
         }
         if (!$tarea_id || empty($comentario)) {
             die("Datos incompletos para crear comentario.");
         }
+
         $this->comentarioModel->crear($tarea_id, $usuario_id, $comentario);
-        // Redirigir de regreso al tablero de la tarea
-        header("Location: /proyectum/router.php?page=tareas/editar&proyecto_id=$tarea_id");
+
+        // Redirigir correctamente a la edición de la tarea dentro del proyecto
+        header("Location: router.php?page=tareas/editar&proyecto_id=$proyecto_id&id=$tarea_id");
+
         exit();
-
-
     }
+
 
     // Listar comentarios de una tarea
     public function listar($tarea_id) {
