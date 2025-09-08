@@ -44,7 +44,7 @@ class Tarea {
             !empty($data['asignado_a']) ? $data['asignado_a'] : null,
             $data['fecha_inicio'] ?? null,
             $data['fecha_fin'] ?? null,
-            $data['estado'] ?? 'pendiente',
+            $data['estado'] ?? 'activo',
             $data['prioridad'] ?? 'media'
         ]);
     }
@@ -80,13 +80,16 @@ class Tarea {
         return $this->db->execute($sql, [$id]);
     }
 
-    public function actualizarLista($tarea_id, $nueva_lista_id) {
+// En models/Tarea.php
+    public function actualizarLista($tarea_id, $lista_id) {
         try {
             $sql = "UPDATE tareas SET lista_id = ? WHERE id = ?";
-            $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute([$nueva_lista_id, $tarea_id]);
-        } catch (PDOException $e) {
-            error_log("Error al actualizar lista: " . $e->getMessage());
+            $result = $this->db->execute($sql, [$lista_id, $tarea_id]);
+            error_log("SQL ejecutado: $sql con parámetros: lista_id=$lista_id, tarea_id=$tarea_id");
+            error_log("Resultado: " . ($result ? 'true' : 'false'));
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error en actualizarLista: " . $e->getMessage());
             return false;
         }
     }

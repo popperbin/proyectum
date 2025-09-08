@@ -10,7 +10,7 @@ class Lista {
 
     // Listar todas las listas con sus tareas para un proyecto
     public function listarPorProyecto($proyecto_id) {
-        $sql = "SELECT * FROM listas WHERE proyecto_id = ? ORDER BY id ASC";
+        $sql = "SELECT * FROM listas WHERE proyecto_id = ? AND estado = 'activo' ORDER BY id ASC";
         $listas = $this->db->fetchAll($sql, [$proyecto_id]);
 
         // Cargar tareas asociadas
@@ -21,6 +21,7 @@ class Lista {
 
         return $listas;
     }
+
 
     // Crear lista nueva
     public function crear($nombre, $proyecto_id) {

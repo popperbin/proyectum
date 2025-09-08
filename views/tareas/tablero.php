@@ -38,9 +38,6 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
             <p class="text-muted">Tablero de tareas estilo Trello</p>
         </div>
         <div>
-            <a href="router.php?page=tareas/listar&proyecto_id=<?= $proyecto_id ?>" class="btn btn-outline-info me-2">
-                📋 Vista Lista
-            </a>
             <a href="router.php?page=proyectos/listar" class="btn btn-outline-secondary">
                 ⬅️ Volver a Proyectos
             </a>
@@ -179,8 +176,7 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
                     <div id="form-tarea-<?= $lista['id'] ?>" class="form-nueva-tarea" style="display:none;">
                         <div class="card mt-2">
                             <div class="card-body">
-                                <form method="POST" action="router.php?page=tareas&accion=crear">
-                                    <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
+                                <form method="POST" action="<?= url('router.php?page=tareas&accion=crear') ?>">                                    <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
                                     <input type="hidden" name="lista_id" value="<?= $lista['id'] ?>">
 
                                     <div class="mb-2">
@@ -248,8 +244,8 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
         <div class="kanban-column kanban-add-column">
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center justify-content-center">
-                    <form method="POST" action="controllers/ListaController.php?accion=crear" class="w-100">
-                        <input type="hidden" name="proyecto_id" value="<?= $proyecto_id ?>">
+                    <form method="POST" action="<?= url('router.php?page=listas&accion=crear') ?>" class="w-100">
+                        <input type="hidden" name="proyecto_id" value="<?= htmlspecialchars($proyecto_id)?>">
                         <div class="input-group">
                             <input type="text" 
                                    class="form-control" 
@@ -413,39 +409,191 @@ $colaboradores = $proyectoModel->obtenerColaboradores($proyecto_id);
 }
 </style>
 
-<!-- JavaScript para drag and drop -->
 <script>
-// Variables globales
+    // Variables globales
 let draggedElement = null;
+let originalParent = null;
+
+// Configuración desde PHP
+const BASE_URL = "<?= url() ?>";
+const PROYECTO_ID = "<?= $proyecto_id ?>";
+
+console.log('Configuración cargada - BASE_URL:', BASE_URL, 'PROYECTO_ID:', PROYECTO_ID);
 
 // Funciones de drag and drop
 function allowDrop(ev) {
     ev.preventDefault();
-    ev.currentTarget.classList.add('drag-over');
+    ev.stopPropagation();
+    
+    if (draggedElement) {
+        const currentListaId = ev.currentTarget.dataset.listaId;
+        const draggedTareaListaId = draggedElement.closest('.kanban-tasks').dataset.listaId;
+        
+        if (currentListaId !== draggedTareaListaId) {
+            ev.currentTarget.classList.add('drag-over');
+        }
+    }
 }
 
 function drag(ev) {
     draggedElement = ev.target;
+    originalParent = ev.target.parentNode;
+    
     ev.target.classList.add('dragging');
     ev.dataTransfer.setData("text", ev.target.dataset.id);
+    
+    console.log('Iniciando drag de tarea:', ev.target.dataset.id);
 }
 
 function drop(ev) {
     ev.preventDefault();
+    ev.stopPropagation();
+    
     ev.currentTarget.classList.remove('drag-over');
     
     const tareaId = ev.dataTransfer.getData("text");
     const nuevaListaId = ev.currentTarget.dataset.listaId;
+    const listaOriginalId = originalParent.dataset.listaId;
     
-    if (draggedElement && nuevaListaId) {
-        // Mover visualmente la tarea
-        ev.currentTarget.appendChild(draggedElement);
-        draggedElement.classList.remove('dragging');
+    console.log('Drop - Tarea:', tareaId, 'De:', listaOriginalId, 'A:', nuevaListaId);
+    
+    // Verificar si se movió a otra lista
+    if (draggedElement && nuevaListaId && nuevaListaId !== listaOriginalId) {
         
-        // Enviar actualización al servidor
+        // Mostrar estado de carga
+        draggedElement.style.opacity = '0.6';
+        draggedElement.style.pointerEvents = 'none';
+        
+        // Mover visualmente
+        ev.currentTarget.appendChild(draggedElement);
+        
+        // Actualizar en servidor
         actualizarTareaLista(tareaId, nuevaListaId);
     }
+    
+    cleanupDrag();
 }
+
+// Actualizar tarea en servidor
+function actualizarTareaLista(tareaId, nuevaListaId) {
+    const url = BASE_URL + 'controllers/TareaController.php?accion=mover';
+    
+    console.log('Enviando a:', url);
+    console.log('Datos:', { tarea_id: tareaId, lista_id: nuevaListaId });
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `tarea_id=${encodeURIComponent(tareaId)}&lista_id=${encodeURIComponent(nuevaListaId)}`
+    })
+    .then(response => {
+        console.log('Respuesta status:', response.status);
+        console.log('Respuesta headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        return response.text().then(text => {
+            console.log('Respuesta raw completa:', text);
+            console.log('Longitud respuesta:', text.length);
+            
+            // Intentar limpiar el texto antes de parsearlo
+            let cleanText = text.trim();
+            
+            // Buscar el JSON al final de la respuesta si hay contenido extra
+            let jsonStart = cleanText.lastIndexOf('{');
+            if (jsonStart > 0) {
+                console.log('Contenido antes del JSON:', cleanText.substring(0, jsonStart));
+                cleanText = cleanText.substring(jsonStart);
+                console.log('JSON limpio:', cleanText);
+            }
+            
+            try {
+                return JSON.parse(cleanText);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                console.error('Texto que causó el error:', cleanText);
+                throw new Error('Respuesta no es JSON válido: ' + cleanText.substring(0, 200));
+            }
+        });
+    })
+    .then(data => {
+        console.log('Datos recibidos:', data);
+        
+        if (data.success) {
+            // Éxito
+            if (draggedElement) {
+                draggedElement.style.opacity = '1';
+                draggedElement.style.pointerEvents = 'auto';
+                draggedElement.classList.remove('dragging');
+            }
+            console.log('Tarea movida exitosamente');
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+    })
+    .catch(error => {
+        console.error('Error moviendo tarea:', error);
+        
+        // Revertir movimiento visual
+        if (draggedElement && originalParent) {
+            originalParent.appendChild(draggedElement);
+            draggedElement.style.opacity = '1';
+            draggedElement.style.pointerEvents = 'auto';
+        }
+        
+        alert('Error al mover la tarea: ' + error.message);
+    });
+}
+
+// Eliminar lista
+function eliminarLista(listaId, nombreLista) {
+    if (confirm(`¿Archivar la lista "${nombreLista}" y todas sus tareas?`)) {
+        const url = BASE_URL + `router.php?page=listas&accion=archivar&id=${listaId}&proyecto_id=${PROYECTO_ID}`;
+        
+        console.log('Eliminando lista - URL:', url);
+        window.location.href = url;
+    }
+}
+
+// Limpiar estados drag
+function cleanupDrag() {
+    if (draggedElement) {
+        draggedElement.classList.remove('dragging');
+        draggedElement.style.opacity = '1';
+        draggedElement.style.pointerEvents = 'auto';
+        draggedElement = null;
+    }
+    
+    originalParent = null;
+    
+    document.querySelectorAll('.drag-over').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+}
+
+// Event listeners
+document.addEventListener('dragend', function(e) {
+    setTimeout(cleanupDrag, 50);
+});
+
+document.addEventListener('dragleave', function(e) {
+    if (e.target.classList.contains('kanban-tasks')) {
+        e.target.classList.remove('drag-over');
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.form-nueva-tarea').forEach(form => {
+            form.style.display = 'none';
+        });
+        cleanupDrag();
+    }
+});
 
 // Funciones para formularios
 function mostrarFormulario(listaId) {
@@ -454,66 +602,12 @@ function mostrarFormulario(listaId) {
     
     if (form.style.display === 'block') {
         const input = form.querySelector('input[name="nombre"]');
-        input.focus();
+        if (input) input.focus();
     }
 }
 
 function ocultarFormulario(listaId) {
-    document.getElementById(`form-tarea-${listaId}`).style.display = 'none';
+    const form = document.getElementById(`form-tarea-${listaId}`);
+    if (form) form.style.display = 'none';
 }
-
-// Actualizar tarea en el servidor
-function actualizarTareaLista(tareaId, nuevaListaId) {
-    fetch('controllers/TareaController.php?accion=mover', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `tarea_id=${tareaId}&lista_id=${nuevaListaId}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            console.error('Error al mover tarea:', data.message);
-            // Revertir el movimiento visual si hay error
-            location.reload();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        location.reload();
-    });
-}
-
-function eliminarLista(listaId, nombreLista) {
-    if (confirm(`¿Eliminar la lista "${nombreLista}" y todas sus tareas?`)) {
-        window.location.href = "router.php?page=listas&accion=archivar&id=" 
-                            + listaId 
-                            + "&proyecto_id=<?= $proyecto_id ?>";
-
-    }
-}
-
-// Limpiar estados de drag cuando termine
-document.addEventListener('dragend', function(e) {
-    if (draggedElement) {
-        draggedElement.classList.remove('dragging');
-        draggedElement = null;
-    }
-    
-    // Limpiar todas las zonas de drop
-    document.querySelectorAll('.drag-over').forEach(el => {
-        el.classList.remove('drag-over');
-    });
-});
-
-// Shortcuts de teclado
-document.addEventListener('keydown', function(e) {
-    // Escape para cerrar formularios
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.form-nueva-tarea').forEach(form => {
-            form.style.display = 'none';
-        });
-    }
-});
 </script>
