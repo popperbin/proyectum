@@ -1,8 +1,12 @@
-<?php require_once __DIR__ . "/../../config/auth.php"; requireLogin(); ?>
+<?php 
+require_once __DIR__ . "/../../config/auth.php"; 
+requireLogin();
+?>
+
 <h2>⚠️ Riesgos del Proyecto</h2>
 
-<a href="/proyectum/controllers/RiesgoController.php?accion=crear&id_proyecto=<?php echo $_GET['id_proyecto']; ?>">➕ Registrar Riesgo</a>
-
+<!-- Botón para crear riesgo -->
+<a href="/proyectum/controllers/RiesgoController.php?accion=crear&id_proyecto=<?= $idProyecto ?>">➕ Registrar Riesgo</a>
 
 <?php if (empty($riesgos)): ?>
     <p>No hay riesgos registrados en este proyecto.</p>
@@ -18,18 +22,18 @@
         </tr>
         <?php foreach ($riesgos as $r): ?>
         <tr>
-            <td><?php echo $r['descripcion']; ?></td>
-            <td><?php echo $r['impacto']; ?></td>
-            <td><?php echo $r['probabilidad']; ?></td>
-            <td><?php echo $r['medidas_mitigacion']; ?></td>
+            <td><?= htmlspecialchars($r['descripcion']) ?></td>
+            <td><?= htmlspecialchars($r['impacto']) ?></td>
+            <td><?= htmlspecialchars($r['probabilidad']) ?></td>
+            <td><?= htmlspecialchars($r['medidas_mitigacion']) ?></td>
             <td>
-                <a href="/proyectum/controllers/RiesgoController.php?accion=editar&id=<?php echo $r['id']; ?>&id_proyecto=<?php echo $_GET['id_proyecto']; ?>">editar</a>
-                <a href="/proyectum/controllers/RiesgoController.php?accion=eliminar&id=<?php echo $r['id']; ?>&id_proyecto=<?php echo $_GET['id_proyecto']; ?>" onclick="return confirm('¿Eliminar riesgo?')">Eliminar</a>
+                <a href="/proyectum/controllers/RiesgoController.php?accion=editar&id=<?= $r['id'] ?>&id_proyecto=<?= $idProyecto ?>">editar</a>
+                <a href="/proyectum/controllers/RiesgoController.php?accion=eliminar&id=<?= $r['id'] ?>&id_proyecto=<?= $idProyecto ?>" onclick="return confirm('¿Eliminar riesgo?')">Eliminar</a>
             </td>
         </tr>
         <?php endforeach; ?>
     </table>
 <?php endif; ?>
-<a href="/proyectum/views/proyectos/listar.php">⬅ Volver a proyectos</a>
-<br>
 
+<!-- Volver al listado de proyectos -->
+<a href="/proyectum/controllers/ProyectoController.php?accion=listar">⬅️ Volver a Proyectos</a>

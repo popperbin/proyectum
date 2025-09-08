@@ -4,12 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 // router.php
 require_once __DIR__ . "/config/config.php";
+require_once __DIR__ . "/controllers/InformeController.php";
 
 if (!isset($_SESSION['usuario'])) {
     header("Location: " . url("views/usuarios/login.php"));
     exit();
 }
-
 
 // Usuario en sesión
 $usuario = $_SESSION['usuario'];
@@ -45,11 +45,19 @@ $allowedRoutes = [
     // Informes
     'informes/generar',
     'informes/listar',
+    'informes/acciones',    
     
     // Riesgos
     'riesgos/listar',
     'riesgos/crear'
 ];
+$page = $_GET['page'] ?? "dashboard";
+$accion = $_GET['accion'] ?? null;
+if ($page === "informes/acciones" && $accion === "descargar" && isset($_GET['id'])) {
+    $controller = new InformeController();
+    $controller->descargar($_GET['id']);
+    exit;
+}
 
 // Verificar si la ruta está permitida
 if (in_array($page, $allowedRoutes)) {
